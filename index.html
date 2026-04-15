@@ -23,7 +23,7 @@
   --safe-bot:env(safe-area-inset-bottom,20px);
 }
 html,body{height:100%;overflow:hidden;background:var(--bg);}
-body{font-family:'Nunito',sans-serif;color:var(--text);display:flex;flex-direction:column;max-width:430px;margin:0 auto;}
+body{font-family:'Nunito',sans-serif;color:var(--text);display:flex;flex-direction:column;max-width:430px;margin:0 auto;position:relative;}
 
 /* HEADER */
 .app-header{padding:calc(var(--safe-top) + 10px) 16px 10px;background:var(--bg);border-bottom:1px solid var(--border);flex-shrink:0;z-index:10;}
@@ -38,6 +38,7 @@ body{font-family:'Nunito',sans-serif;color:var(--text);display:flex;flex-directi
 /* SCROLL */
 .scroll{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding-bottom:calc(var(--safe-bot) + 76px);}
 .scroll::-webkit-scrollbar{display:none;}
+.scroll.hidden{display:none!important;}
 
 /* BOTTOM NAV */
 .bnav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:rgba(15,15,20,0.96);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:1px solid var(--border);padding:8px 0 calc(var(--safe-bot) + 4px);display:flex;z-index:100;}
@@ -50,7 +51,7 @@ body{font-family:'Nunito',sans-serif;color:var(--text);display:flex;flex-directi
 .page.active{display:block;}
 
 /* CHAT UI */
-.chat-page{display:none;flex-direction:column;height:100%;}
+.chat-page{display:none;flex-direction:column;flex:1;overflow:hidden;min-height:0;}
 .chat-page.active{display:flex;}
 .chat-messages{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px;padding-bottom:0;}
 .chat-messages::-webkit-scrollbar{display:none;}
@@ -221,6 +222,11 @@ body{font-family:'Nunito',sans-serif;color:var(--text);display:flex;flex-directi
 .late-sub{font-size:11px;color:rgba(251,191,36,0.6);margin-top:1px;}
 
 @keyframes fadeUp{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+
+/* FULLSCREEN PAGES (outside scroll) */
+.shop-page{display:none;flex-direction:column;flex:1;overflow:hidden;min-height:0;}
+.shop-page.active{display:flex;}
+.shop-page .scroll{padding-bottom:calc(var(--safe-bot) + 76px);}
 </style>
 </head>
 <body>
@@ -381,14 +387,18 @@ body{font-family:'Nunito',sans-serif;color:var(--text);display:flex;flex-directi
   </div>
 </div>
 
-<!-- SHOPPING PAGE -->
-<div class="page" id="page-shop">
-  <div class="sec" style="margin-top:0">🛒 Список на неделю</div>
-  <div style="display:flex;gap:8px;margin-bottom:12px;">
-    <button onclick="clearChecked()" style="flex:1;padding:9px;border-radius:10px;background:var(--surface2);border:1px solid var(--border);color:var(--muted);font-size:12px;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif;">Убрать купленное</button>
-    <button onclick="resetShop()" style="flex:1;padding:9px;border-radius:10px;background:var(--red-bg);border:1px solid rgba(248,113,113,0.3);color:var(--red);font-size:12px;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif;">Сбросить всё</button>
+<!-- SHOPPING PAGE (outside scroll, full height) -->
+<div class="shop-page" id="page-shop">
+  <div class="scroll" id="shopScroll">
+    <div style="padding:14px 14px 0;">
+    <div class="sec" style="margin-top:0">🛒 Список на неделю</div>
+    <div style="display:flex;gap:8px;margin-bottom:12px;">
+      <button onclick="clearChecked()" style="flex:1;padding:9px;border-radius:10px;background:var(--surface2);border:1px solid var(--border);color:var(--muted);font-size:12px;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif;">Убрать купленное</button>
+      <button onclick="resetShop()" style="flex:1;padding:9px;border-radius:10px;background:var(--red-bg);border:1px solid rgba(248,113,113,0.3);color:var(--red);font-size:12px;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif;">Сбросить всё</button>
+    </div>
+    <div id="shopList"></div>
+    </div>
   </div>
-  <div id="shopList"></div>
 </div>
 
 <!-- BOTTOM NAV -->
@@ -1576,14 +1586,30 @@ function markDoneWithMeal(i){
 
 // ========== PAGE SWITCH ==========
 function switchPage(name,btn){
-  document.querySelectorAll('.page,.chat-page').forEach(p=>p.classList.remove('active'));
+  // Hide all pages inside scroll
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  // Hide all fullscreen pages
+  document.querySelectorAll('.chat-page,.shop-page').forEach(p=>p.classList.remove('active'));
+  // Update nav
   document.querySelectorAll('.nb').forEach(b=>b.classList.remove('active'));
-  document.getElementById('page-'+name).classList.add('active');
   btn.classList.add('active');
-  if(name!=='chat') document.getElementById('mainScroll').scrollTop=0;
-  if(name==='settings') renderSettings();
-  if(name==='water'){renderWater();renderKcalChart();}
-  if(name==='shop') renderShopList();
+
+  const scroll = document.getElementById('mainScroll');
+
+  if(name==='chat'){
+    scroll.classList.add('hidden');
+    document.getElementById('page-chat').classList.add('active');
+  } else if(name==='shop'){
+    scroll.classList.add('hidden');
+    document.getElementById('page-shop').classList.add('active');
+    renderShopList();
+  } else {
+    scroll.classList.remove('hidden');
+    document.getElementById('page-'+name).classList.add('active');
+    scroll.scrollTop=0;
+    if(name==='settings') renderSettings();
+    if(name==='water'){renderWater();renderKcalChart();}
+  }
 }
 
 // ========== TOAST ==========
@@ -1605,8 +1631,6 @@ window.onload=()=>{
   renderKcalChart();
   renderSettings();
   renderQuickActions();
-
-  renderShopList();
   // Welcome chat message
   const hour=new Date().getHours();
   const greeting=hour<10?'Доброе утро':hour<14?'Привет':hour<18?'Добрый день':'Добрый вечер';
