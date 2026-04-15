@@ -158,6 +158,29 @@ body{font-family:'Nunito',sans-serif;color:var(--text);display:flex;flex-directi
 .rx-btn.sel{border-color:var(--red);background:var(--red-bg);color:var(--red);}
 .save-rx{width:100%;margin-top:8px;padding:10px;border-radius:12px;background:var(--surface2);border:1px solid var(--border);color:var(--text);font-size:13px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif;}
 
+/* SHOP */
+.shop-cat{font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin:16px 0 8px;}
+.shop-cat:first-child{margin-top:0;}
+.shop-items{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;}
+.shop-row{display:flex;align-items:center;gap:10px;padding:11px 14px;border-bottom:1px solid var(--border);cursor:pointer;transition:background 0.15s;}
+.shop-row:last-child{border-bottom:none;}
+.shop-row:active{background:var(--surface2);}
+.shop-check-box{width:20px;height:20px;border-radius:6px;border:2px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all 0.2s;}
+.shop-check-box.done{background:var(--green);border-color:var(--green);}
+.shop-row-text{flex:1;}
+.shop-row-name{font-size:13px;font-weight:700;}
+.shop-row-name.done{text-decoration:line-through;color:var(--dim);}
+.shop-row-detail{font-size:11px;color:var(--muted);}
+.shop-row-store{font-size:10px;color:var(--teal);font-weight:700;margin-left:auto;flex-shrink:0;}
+
+/* MEAL PICKER */
+.meal-pick-item{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px 12px;cursor:pointer;transition:all 0.15s;}
+.meal-pick-item:active{background:var(--green-bg);border-color:rgba(74,222,128,0.4);}
+.meal-pick-item.selected{background:var(--green-bg);border-color:rgba(74,222,128,0.4);}
+.mp-name{font-size:13px;font-weight:800;}
+.mp-detail{font-size:11px;color:var(--muted);margin-top:2px;}
+.mp-nut{font-size:10px;color:var(--amber);margin-top:2px;}
+
 /* CHART */
 .chart-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:14px;margin-bottom:10px;}
 .chart-title{font-size:14px;font-weight:800;margin-bottom:10px;}
@@ -358,12 +381,23 @@ body{font-family:'Nunito',sans-serif;color:var(--text);display:flex;flex-directi
   </div>
 </div>
 
+<!-- SHOPPING PAGE -->
+<div class="page" id="page-shop">
+  <div class="sec" style="margin-top:0">🛒 Список на неделю</div>
+  <div style="display:flex;gap:8px;margin-bottom:12px;">
+    <button onclick="clearChecked()" style="flex:1;padding:9px;border-radius:10px;background:var(--surface2);border:1px solid var(--border);color:var(--muted);font-size:12px;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif;">Убрать купленное</button>
+    <button onclick="resetShop()" style="flex:1;padding:9px;border-radius:10px;background:var(--red-bg);border:1px solid rgba(248,113,113,0.3);color:var(--red);font-size:12px;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif;">Сбросить всё</button>
+  </div>
+  <div id="shopList"></div>
+</div>
+
 <!-- BOTTOM NAV -->
 <nav class="bnav">
   <button class="nb active" onclick="switchPage('home',this)"><div class="nb-icon">🏠</div><span>День</span></button>
   <button class="nb" onclick="switchPage('chat',this)"><div class="nb-icon">💬</div><span>Мама</span></button>
   <button class="nb" onclick="switchPage('water',this)"><div class="nb-icon">📊</div><span>Трекер</span></button>
-  <button class="nb" onclick="switchPage('settings',this)"><div class="nb-icon">⚙️</div><span>Настройки</span></button>
+  <button class="nb" onclick="switchPage('shop',this)" id="nav-shop"><div class="nb-icon">🛒</div><span>Список</span></button>
+  <button class="nb" onclick="switchPage('settings',this)"><div class="nb-icon">⚙️</div><span>Ещё</span></button>
 </nav>
 
 <!-- MEAL MODAL -->
@@ -372,9 +406,36 @@ body{font-family:'Nunito',sans-serif;color:var(--text);display:flex;flex-directi
     <div class="modal-handle"></div>
     <div class="modal-title" id="modalTitle">—</div>
     <div class="nut-row" id="modalNut"></div>
-    <div class="meal-detail" id="modalItems"></div>
+
+    <!-- MEAL PICKER SECTION -->
+    <div id="mealPickerSection">
+      <div style="font-size:12px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">Выбери что поешь:</div>
+      <div id="mealPickerList" style="display:flex;flex-direction:column;gap:6px;max-height:220px;overflow-y:auto;"></div>
+      <button onclick="showFridgeInput()" style="width:100%;margin-top:8px;padding:9px;border-radius:10px;background:var(--surface2);border:1px solid var(--border);color:var(--muted);font-size:12px;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif;">
+        🧊 Нет этого — напишу что есть дома
+      </button>
+    </div>
+
+    <!-- FRIDGE INPUT SECTION -->
+    <div id="fridgeSection" style="display:none;">
+      <div style="font-size:12px;font-weight:800;color:var(--amber);margin-bottom:6px;">Напиши что есть дома:</div>
+      <textarea id="fridgeInputText" placeholder="Например: есть яйца, творог, тунец, гречка..." style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px;font-size:13px;color:var(--text);font-family:'Nunito',sans-serif;outline:none;resize:none;height:70px;"></textarea>
+      <button onclick="suggestFromFridge()" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;background:var(--green-bg);border:1px solid rgba(74,222,128,0.3);color:var(--green);font-size:13px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif;">✨ Подобрать замену</button>
+      <div id="fridgeSuggestion" style="display:none;margin-top:8px;background:var(--surface2);border-radius:10px;padding:10px;font-size:13px;"></div>
+    </div>
+
+    <!-- SELECTED MEAL -->
+    <div id="selectedMealSection" style="display:none;margin-bottom:8px;">
+      <div style="background:var(--green-bg);border:1px solid rgba(74,222,128,0.2);border-radius:10px;padding:10px 12px;">
+        <div style="font-size:11px;color:var(--green);font-weight:800;margin-bottom:3px;">Выбрано:</div>
+        <div id="selectedMealName" style="font-size:14px;font-weight:800;"></div>
+        <div id="selectedMealItems" style="font-size:11px;color:var(--muted);margin-top:2px;"></div>
+        <div id="selectedMealNut" style="font-size:11px;color:var(--amber);margin-top:2px;"></div>
+      </div>
+    </div>
+
     <div style="background:var(--amber-bg);border-radius:10px;padding:9px 12px;margin-bottom:10px;font-size:12px;color:rgba(251,191,36,0.85);">🫁 Жуй медленно · После еды не ложись 2–3ч · Ужин до 20:30</div>
-    <button class="mbtn primary" onclick="markDone(currentIdx)">✅ Поел — отметить</button>
+    <button class="mbtn primary" onclick="markDoneWithMeal(currentIdx)">✅ Поел — отметить</button>
     <button class="mbtn sec" onclick="postpone(currentIdx,30)">⏰ Поем через 30 мин</button>
     <button class="mbtn sec" onclick="postpone(currentIdx,60)">⏰ Поем через 1 час</button>
     <button class="mbtn danger" onclick="skipMeal(currentIdx)">⏭ Пропустить</button>
@@ -518,7 +579,14 @@ function openModal(i){
     <div class="nut-cell"><div class="nut-val" style="color:var(--amber)">${kcal}</div><div class="nut-lbl">ккал</div></div>
     <div class="nut-cell"><div class="nut-val" style="color:var(--blue)">${prot}г</div><div class="nut-lbl">белок</div></div>
     <div class="nut-cell"><div class="nut-val" style="color:var(--green)">${m.badges.length?m.badges[0]:'—'}</div><div class="nut-lbl">особое</div></div>`;
-  document.getElementById('modalItems').innerHTML=items.map(it=>`<div class="meal-detail-item">${it}</div>`).join('');
+  // Render meal picker for pending meals
+  if(m.status==='pending'){
+    renderMealPicker(i);
+  } else {
+    document.getElementById('mealPickerSection').style.display='none';
+    document.getElementById('fridgeSection').style.display='none';
+    document.getElementById('selectedMealSection').style.display='none';
+  }
   document.getElementById('mealOverlay').classList.add('open');
 }
 function closeOverlay(id){document.getElementById(id).classList.remove('open');}
@@ -770,55 +838,200 @@ function addTyping(){
   wrap.scrollTop=wrap.scrollHeight;
 }
 
-// ========== FOOD DATABASE (offline) ==========
+// ========== FOOD DATABASE — 100 блюд для Инсбрука ==========
 const FOODS = [
-  // хлеб/выпечка
-  {words:['лепинь','хлеб','тост','хлебец','батон','булк'],kcalPer100:260,protPer100:8},
-  // рыба
-  {words:['лосось','сёмга'],kcalPer100:208,protPer100:20},
-  {words:['скумбрия'],kcalPer100:191,protPer100:18},
-  {words:['тунец'],kcalPer100:130,protPer100:28},
-  {words:['сардин'],kcalPer100:140,protPer100:19},
-  {words:['форель'],kcalPer100:148,protPer100:20},
-  {words:['треска'],kcalPer100:78,protPer100:18},
-  // морепродукты
-  {words:['мидии','мидий'],kcalPer100:86,protPer100:12},
-  {words:['креветк'],kcalPer100:95,protPer100:18},
-  {words:['кальмар'],kcalPer100:92,protPer100:18},
-  // молочка
-  {words:['творог'],kcalPer100:168,protPer100:18},
-  {words:['сыр','гауда','пармезан','рикотта'],kcalPer100:350,protPer100:25},
-  {words:['йогурт'],kcalPer100:66,protPer100:5},
-  {words:['кефир'],kcalPer100:51,protPer100:3},
-  {words:['молок'],kcalPer100:64,protPer100:3},
-  {words:['сметан'],kcalPer100:210,protPer100:3},
-  // яйца
-  {words:['яйц','яйко','омлет'],kcalPer100:157,protPer100:13},
-  // крупы
-  {words:['гречк'],kcalPer100:343,protPer100:13},
-  {words:['овсянк','овёс','каш'],kcalPer100:370,protPer100:11},
-  {words:['рис','пшён','пшено'],kcalPer100:340,protPer100:7},
-  {words:['паст','макарон','спагетт'],kcalPer100:350,protPer100:11},
-  {words:['чечевиц','фасоль'],kcalPer100:310,protPer100:24},
-  // овощи
-  {words:['рукол','шпинат','салат','зелень'],kcalPer100:20,protPer100:2},
-  {words:['огурец','огурц','помидор','томат'],kcalPer100:15,protPer100:1},
-  {words:['брокколи','цукини','кабачк'],kcalPer100:30,protPer100:3},
-  {words:['картофел','картошк'],kcalPer100:77,protPer100:2},
-  // орехи/масло
-  {words:['орех','миндаль','кешью'],kcalPer100:620,protPer100:20},
-  {words:['масло олив','масло слив','масло'],kcalPer100:900,protPer100:0},
-  {words:['авокадо'],kcalPer100:160,protPer100:2},
-  // мясо/колбаса (пескетарианец, но на всякий случай)
-  {words:['сосиск','колбас'],kcalPer100:230,protPer100:12},
-  // фрукты
-  {words:['банан'],kcalPer100:89,protPer100:1},
-  {words:['яблок','груш'],kcalPer100:52,protPer100:0},
-  {words:['ягод','черник','малин'],kcalPer100:45,protPer100:1},
-  // прочее
-  {words:['мёд','мед'],kcalPer100:304,protPer100:0},
-  {words:['арахисов'],kcalPer100:590,protPer100:25},
+  // РЫБА (Spar/Billa/Merkur)
+  {words:['лосось','сёмга','lachs'],kcalPer100:208,protPer100:20},
+  {words:['скумбрия','makrele'],kcalPer100:191,protPer100:18},
+  {words:['тунец','thunfisch'],kcalPer100:130,protPer100:28},
+  {words:['сардин','sardine'],kcalPer100:140,protPer100:19},
+  {words:['форель','forelle'],kcalPer100:148,protPer100:20},
+  {words:['треска','kabeljau'],kcalPer100:78,protPer100:18},
+  {words:['сельдь','herring','хамса'],kcalPer100:158,protPer100:18},
+  {words:['палтус','heilbutt'],kcalPer100:110,protPer100:19},
+  // МОРЕПРОДУКТЫ
+  {words:['мидии','мидий','muscheln'],kcalPer100:86,protPer100:12},
+  {words:['креветк','garnelen'],kcalPer100:95,protPer100:18},
+  {words:['кальмар','tintenfisch'],kcalPer100:92,protPer100:18},
+  {words:['осьминог','oktopus'],kcalPer100:82,protPer100:15},
+  {words:['устриц','auster'],kcalPer100:70,protPer100:9},
+  // МОЛОЧНЫЕ (австрийские бренды)
+  {words:['творог','quark','topfen'],kcalPer100:68,protPer100:12},
+  {words:['гауда','gouda','сыр'],kcalPer100:356,protPer100:25},
+  {words:['пармезан','parmesan'],kcalPer100:431,protPer100:38},
+  {words:['рикотта','ricotta'],kcalPer100:174,protPer100:11},
+  {words:['фета','feta'],kcalPer100:264,protPer100:14},
+  {words:['моцарелл','mozzarella'],kcalPer100:280,protPer100:18},
+  {words:['йогурт','joghurt'],kcalPer100:66,protPer100:5},
+  {words:['кефир','buttermilch'],kcalPer100:51,protPer100:3},
+  {words:['молок','milch'],kcalPer100:64,protPer100:3},
+  {words:['сметан','sauerrahm','crème'],kcalPer100:210,protPer100:3},
+  {words:['масло сливочн','butter'],kcalPer100:717,protPer100:1},
+  // ЯЙЦА
+  {words:['яйц','яйко','ei','eier'],kcalPer100:157,protPer100:13},
+  {words:['омлет','rührei'],kcalPer100:160,protPer100:12},
+  // КРУПЫ И ЗЛАКИ
+  {words:['гречк','buchweizen'],kcalPer100:343,protPer100:13},
+  {words:['овсянк','овёс','haferflocken','porridge'],kcalPer100:370,protPer100:11},
+  {words:['рис','reis'],kcalPer100:340,protPer100:7},
+  {words:['пшён','пшено','hirse'],kcalPer100:378,protPer100:11},
+  {words:['паст','макарон','спагетт','nudeln'],kcalPer100:350,protPer100:11},
+  {words:['чечевиц','linsen'],kcalPer100:310,protPer100:24},
+  {words:['нут','kichererbsen'],kcalPer100:364,protPer100:19},
+  {words:['фасоль','bohnen'],kcalPer100:130,protPer100:9},
+  {words:['киноа','quinoa'],kcalPer100:368,protPer100:14},
+  {words:['кускус','couscous'],kcalPer100:376,protPer100:13},
+  {words:['полента','mais'],kcalPer100:360,protPer100:9},
+  // ХЛЕБ И ВЫПЕЧКА (австрийская специфика)
+  {words:['лепинь','лепёшка','fladenbrot'],kcalPer100:275,protPer100:9},
+  {words:['хлеб','brot','vollkornbrot'],kcalPer100:247,protPer100:8},
+  {words:['тост','toastbrot'],kcalPer100:265,protPer100:9},
+  {words:['хлебец','knäckebrot','reiskeks'],kcalPer100:350,protPer100:10},
+  {words:['брецель','brezel'],kcalPer100:370,protPer100:10},
+  {words:['семолин','grieß'],kcalPer100:360,protPer100:11},
+  // ОВОЩИ
+  {words:['шпинат','spinat'],kcalPer100:23,protPer100:3},
+  {words:['руккол','rucola'],kcalPer100:25,protPer100:2},
+  {words:['брокколи','brokkoli'],kcalPer100:34,protPer100:3},
+  {words:['цукини','кабачк','zucchini'],kcalPer100:17,protPer100:1},
+  {words:['огурец','огурц','gurke'],kcalPer100:13,protPer100:1},
+  {words:['помидор','томат','tomate'],kcalPer100:18,protPer100:1},
+  {words:['перец болгарск','paprika'],kcalPer100:31,protPer100:1},
+  {words:['картофел','картошк','erdapfel','kartoffel'],kcalPer100:77,protPer100:2},
+  {words:['морков','karotte'],kcalPer100:41,protPer100:1},
+  {words:['цветная капуст','karfiol','blumenkohl'],kcalPer100:25,protPer100:2},
+  {words:['баклажан','melanzani','aubergine'],kcalPer100:25,protPer100:1},
+  {words:['сельдерей','sellerie'],kcalPer100:16,protPer100:1},
+  {words:['лук','zwiebel'],kcalPer100:40,protPer100:1},
+  {words:['чеснок','knoblauch'],kcalPer100:149,protPer100:6},
+  {words:['авокадо','avocado'],kcalPer100:160,protPer100:2},
+  // ФРУКТЫ
+  {words:['банан','banane'],kcalPer100:89,protPer100:1},
+  {words:['яблок','apfel'],kcalPer100:52,protPer100:0},
+  {words:['груш','birne'],kcalPer100:57,protPer100:0},
+  {words:['апельсин','orange'],kcalPer100:47,protPer100:1},
+  {words:['клубник','erdbeere'],kcalPer100:33,protPer100:1},
+  {words:['черник','blaubeere','heidelbeere'],kcalPer100:57,protPer100:1},
+  {words:['малин','himbeere'],kcalPer100:52,protPer100:1},
+  {words:['виноград','weintraube'],kcalPer100:69,protPer100:1},
+  {words:['манго','mango'],kcalPer100:60,protPer100:1},
+  // ОРЕХИ И МАСЛА
+  {words:['миндаль','mandel'],kcalPer100:579,protPer100:21},
+  {words:['грецк','walnuss'],kcalPer100:654,protPer100:15},
+  {words:['кешью','cashew'],kcalPer100:553,protPer100:18},
+  {words:['тыквенн','kürbiskern'],kcalPer100:559,protPer100:30},
+  {words:['семена чиа','chiasamen'],kcalPer100:486,protPer100:17},
+  {words:['семена льна','leinsamen'],kcalPer100:534,protPer100:18},
+  {words:['арахисов','erdnussbutter'],kcalPer100:590,protPer100:25},
+  {words:['оливков масло','olivenöl'],kcalPer100:884,protPer100:0},
+  // ПРОЧЕЕ
+  {words:['мёд','мед','honig'],kcalPer100:304,protPer100:0},
+  {words:['сосиск','протеинов сосиск','würstel'],kcalPer100:230,protPer100:14},
+  {words:['хумус','hummus'],kcalPer100:177,protPer100:8},
+  {words:['тофу','tofu'],kcalPer100:76,protPer100:8},
 ];
+
+// ========== 100 ГОТОВЫХ БЛЮД ДЛЯ ИНСБРУКА ==========
+// Все блюда: без острого, без кислого, небольшие порции, легко в Spar/Billa/Merkur
+const MEAL_DB = {
+  завтраки: [
+    {name:'Овсянка с бананом и мёдом', items:['Овсяные хлопья (Haferflocken) 70г','Молоко 200мл','Банан','Мёд 1 ч.л.'], kcal:420, prot:12, time:10, store:'Spar/Hofer', tip:'Вари на молоке 5 мин'},
+    {name:'Яйца всмятку с хлебом', items:['Яйца 2шт','Хлеб цельнозерновой 2 куска','Масло сливочное','Огурец'], kcal:380, prot:20, time:7, store:'Любой', tip:'Варить 5-6 мин'},
+    {name:'Паровой омлет с сыром', items:['Яйца 3шт','Молоко 50мл','Гауда 30г'], kcal:360, prot:28, time:8, store:'Любой', tip:'Без масла — мягче для желудка'},
+    {name:'Гречневая каша на молоке', items:['Гречка (Buchweizen) 70г','Молоко 200мл','Масло сливочное','Мёд'], kcal:440, prot:14, time:20, store:'Spar/Billa', tip:'Хорошо для железа'},
+    {name:'Творог с ягодами и мёдом', items:['Topfen 5% 200г','Черника/малина 80г','Мёд 1 ч.л.'], kcal:280, prot:22, time:3, store:'Spar/Billa', tip:'Быстрый и лёгкий'},
+    {name:'Рисовая каша на молоке', items:['Рис круглый 70г','Молоко 300мл','Ванилин','Мёд'], kcal:420, prot:10, time:20, store:'Любой', tip:'Мягко для грыжи'},
+    {name:'Тост с лососем и авокадо', items:['Хлеб тостовый 2 куска','Лосось слабосол. 60г','Авокадо ½','Огурец'], kcal:480, prot:22, time:5, store:'Spar/Merkur', tip:'Лосось из холодной части'},
+    {name:'Мюсли с йогуртом', items:['Мюсли без сахара 50г','Joghurt 3.5% 150г','Банан','Черника'], kcal:400, prot:12, time:3, store:'Spar/Hofer', tip:'Покупай мюсли без изюма'},
+    {name:'Пшённая каша с маслом', items:['Пшено (Hirse) 70г','Молоко 250мл','Масло слив.','Мёд'], kcal:430, prot:11, time:20, store:'Billa/Merkur', tip:'Богато железом'},
+    {name:'Скрэмбл с творогом', items:['Яйца 3шт','Topfen 80г','Хлеб 1 кусок'], kcal:380, prot:30, time:7, store:'Любой', tip:'Взбить яйца с творогом вместе'},
+    {name:'Каша из киноа с молоком', items:['Quinoa 60г','Молоко 200мл','Мёд','Банан'], kcal:410, prot:14, time:15, store:'Billa/Merkur', tip:'Промыть перед варкой'},
+    {name:'Греческий йогурт с орехами', items:['Joghurt греческий 200г','Грецкие орехи 30г','Мёд','Яблоко'], kcal:420, prot:16, time:3, store:'Spar', tip:'Австрийский Steirerkraft'},
+    {name:'Хлеб с тунцом и огурцом', items:['Цельнозерновой хлеб 2 куска','Тунец конс. 80г','Огурец','Немного масла'], kcal:360, prot:28, time:5, store:'Любой', tip:'Тунец в собственном соку'},
+    {name:'Молочная полента', items:['Polenta 60г','Молоко 300мл','Масло','Гауда 20г'], kcal:390, prot:12, time:10, store:'Spar/Billa', tip:'Северо-итальянская классика'},
+    {name:'Яйцо пашот на хлебе', items:['Яйцо 1шт','Хлеб 2 куска','Авокадо ½','Лимон'], kcal:350, prot:14, time:8, store:'Любой', tip:'Уксус в воду — яйцо держит форму'},
+  ],
+  перекусы: [
+    {name:'Творог с мёдом', items:['Topfen 5% 130г','Мёд 1 ч.л.','Корица'], kcal:175, prot:16, time:2, store:'Любой', tip:'Казеин — идеально между приёмами'},
+    {name:'Миндаль и банан', items:['Миндаль 30г','Банан'], kcal:270, prot:8, time:1, store:'Любой', tip:'Держи орехи в кармане'},
+    {name:'Хлебец с сыром', items:['Knäckebrot 2шт','Гауда 40г','Огурец'], kcal:260, prot:14, time:2, store:'Любой', tip:'Gouda из Spar'},
+    {name:'Кефир с грецкими орехами', items:['Buttermilch/кефир 250мл','Грецкие орехи 25г'], kcal:280, prot:10, time:1, store:'Любой', tip:'Лёгкий перекус'},
+    {name:'Яблоко с арахисовой пастой', items:['Яблоко 1шт','Арахисовая паста 2 ст.л.'], kcal:280, prot:8, time:2, store:'Spar', tip:'Паста без сахара — Hofer'},
+    {name:'Греческий йогурт с бананом', items:['Joghurt греческий 150г','Банан','Семена чиа 1 ч.л.'], kcal:250, prot:12, time:2, store:'Любой', tip:''},
+    {name:'Варёное яйцо с хлебцем', items:['Яйцо 2шт','Хлебец 1шт','Огурец'], kcal:220, prot:16, time:1, store:'Любой', tip:'Отвари с вечера'},
+    {name:'Грецкие орехи с изюмом', items:['Грецкие орехи 35г','Изюм 20г'], kcal:290, prot:7, time:1, store:'Любой', tip:'Держи смесь готовой'},
+    {name:'Молоко с мёдом', items:['Молоко тёплое 250мл','Мёд 1 ч.л.'], kcal:190, prot:8, time:3, store:'Любой', tip:'Успокаивает желудок'},
+    {name:'Моцарелла с помидором', items:['Mozzarella 80г','Помидор 1шт','Базилик','Масло оливк.'], kcal:300, prot:16, time:3, store:'Spar/Billa', tip:'Без уксуса — кислит'},
+    {name:'Хумус с хлебцами', items:['Hummus 80г','Knäckebrot 2шт','Морковь'], kcal:260, prot:9, time:2, store:'Billa/Spar', tip:'Лёгкий для желудка'},
+    {name:'Тыквенные семечки с йогуртом', items:['Joghurt 150г','Тыквенные семечки 25г','Мёд'], kcal:270, prot:13, time:2, store:'Любой', tip:'Kürbiskerne из Styria'},
+    {name:'Ряженка с овсяным печеньем', items:['Ряженка 200мл','Печенье овсяное 3шт'], kcal:280, prot:8, time:1, store:'Billa', tip:''},
+    {name:'Творожный шарик с миндалём', items:['Topfen 100г','Миндаль 20г','Банан','Мёд'], kcal:290, prot:14, time:3, store:'Любой', tip:'Смешай, слепи шарики'},
+    {name:'Сыр с виноградом', items:['Гауда/фета 50г','Виноград горсть','Хлебец 1шт'], kcal:270, prot:12, time:2, store:'Любой', tip:''},
+  ],
+  обеды: [
+    {name:'Лосось на пару с гречкой', items:['Лосось 160г','Buchweizen 80г','Шпинат тушёный','Лимон'], kcal:560, prot:42, time:20, store:'Spar/Merkur', tip:'D3 + железо в одном блюде'},
+    {name:'Тунец с чечевицей', items:['Тунец конс. 160г','Чечевица красная 80г','Огурец','Оливк. масло'], kcal:480, prot:46, time:15, store:'Любой', tip:'Быстро и богато белком'},
+    {name:'Форель запечённая с картофелем', items:['Forelle 180г','Картофель 200г','Морковь','Укроп'], kcal:520, prot:38, time:25, store:'Spar/Fischmarkt', tip:'Запекать при 180° 20 мин'},
+    {name:'Мидии с рисом', items:['Мидии 200г','Рис 80г','Чеснок','Петрушка'], kcal:440, prot:28, time:15, store:'Spar/Merkur', tip:'Рекорд по железу'},
+    {name:'Скумбрия с гречкой', items:['Скумбрия 180г','Гречка 80г','Цукини','Лимон'], kcal:520, prot:36, time:20, store:'Spar/Hofer', tip:'Максимум D3'},
+    {name:'Суп из лосося', items:['Лосось 150г','Картофель 150г','Морковь','Зелень'], kcal:380, prot:30, time:25, store:'Spar', tip:'Бульон мягкий — хорошо при грыже'},
+    {name:'Паста с тунцом', items:['Nudeln 80г','Тунец 120г','Цукини','Пармезан 15г'], kcal:520, prot:38, time:15, store:'Любой', tip:'Без томатного соуса'},
+    {name:'Креветки с рисом', items:['Krevetki 200г','Рис 80г','Чеснок','Лимон'], kcal:420, prot:34, time:15, store:'Spar/Merkur', tip:'Размораживай заранее'},
+    {name:'Треска запечённая с овощами', items:['Kabeljau 200г','Брокколи 150г','Морковь','Оливк. масло'], kcal:360, prot:40, time:20, store:'Spar/Billa', tip:'Нежирная рыба — легко для желудка'},
+    {name:'Чечевичный суп', items:['Чечевица 100г','Морковь','Сельдерей','Лавровый лист'], kcal:300, prot:20, time:25, store:'Любой', tip:'Без острых специй'},
+    {name:'Нут с овощами и яйцом', items:['Нут конс. 150г','Перец болгарский','Яйцо 2шт','Оливк. масло'], kcal:440, prot:26, time:10, store:'Spar/Billa', tip:'Готовый нут из банки'},
+    {name:'Кускус с форелью', items:['Couscous 80г','Форель 160г','Цукини','Лимон'], kcal:490, prot:36, time:15, store:'Spar/Merkur', tip:'Залить кускус кипятком на 5 мин'},
+    {name:'Омлет с мидиями', items:['Яйца 3шт','Мидии 100г','Шпинат','Молоко 50мл'], kcal:380, prot:34, time:12, store:'Spar', tip:''},
+    {name:'Сардины с картофелем', items:['Сардины конс. 120г','Картофель варёный 200г','Огурец','Петрушка'], kcal:420, prot:28, time:20, store:'Любой', tip:'Богато D3'},
+    {name:'Лосось с киноа и брокколи', items:['Лосось 160г','Quinoa 70г','Брокколи 150г'], kcal:530, prot:44, time:20, store:'Billa/Merkur', tip:''},
+    {name:'Суп с форелью и овощами', items:['Форель 130г','Картофель 150г','Морковь','Зелень'], kcal:350, prot:28, time:25, store:'Spar', tip:'Мягкий бульон хорош при грыже'},
+    {name:'Тунец с нутом', items:['Тунец 160г','Нут конс. 150г','Огурец','Лимон'], kcal:440, prot:44, time:5, store:'Любой', tip:'Самый быстрый обед'},
+    {name:'Полента с рыбой', items:['Polenta 70г','Треска 160г','Шпинат','Пармезан 15г'], kcal:420, prot:36, time:15, store:'Spar/Billa', tip:''},
+    {name:'Кальмары тушёные с гречкой', items:['Кальмары 200г','Гречка 80г','Морковь','Чеснок'], kcal:410, prot:34, time:20, store:'Spar/Merkur', tip:''},
+    {name:'Яичный суп с хлебом', items:['Яйца 2шт','Бульон овощной 400мл','Хлеб 1 кусок','Зелень'], kcal:280, prot:16, time:10, store:'Любой', tip:'Лёгкий в сложные дни'},
+  ],
+  ужины: [
+    {name:'Мидии тушёные с рисом', items:['Мидии 200г','Рис 70г','Чеснок','Зелень'], kcal:420, prot:26, time:15, store:'Spar/Merkur', tip:'До 20:30! Железо рекорд'},
+    {name:'Лосось в сливочном соусе', items:['Лосось 160г','Сливки 20% 80мл','Укроп','Рис 60г'], kcal:540, prot:38, time:15, store:'Spar/Merkur', tip:'Небольшая порция'},
+    {name:'Тушёные креветки с пастой', items:['Krevetki 180г','Nudeln 70г','Чеснок','Пармезан 15г'], kcal:480, prot:32, time:15, store:'Spar', tip:'Без острого'},
+    {name:'Скумбрия запечённая', items:['Скумбрия 180г','Картофель 150г','Лимон','Укроп'], kcal:490, prot:34, time:25, store:'Spar/Hofer', tip:'D3 вечером'},
+    {name:'Форель на пару с овощами', items:['Форель 160г','Брокколи 150г','Морковь','Лимон'], kcal:380, prot:36, time:20, store:'Spar/Fischmarkt', tip:''},
+    {name:'Кальмары с чечевицей', items:['Кальмары 200г','Чечевица 80г','Морковь','Зелень'], kcal:400, prot:38, time:20, store:'Spar/Merkur', tip:''},
+    {name:'Треска с полентой', items:['Kabeljau 180г','Polenta 60г','Шпинат','Лимон'], kcal:360, prot:36, time:15, store:'Spar/Billa', tip:''},
+    {name:'Тунец с картофелем', items:['Тунец конс. 160г','Картофель 180г','Огурец','Оливк. масло'], kcal:420, prot:32, time:20, store:'Любой', tip:'Быстро и сытно'},
+    {name:'Паровой омлет с рыбой', items:['Яйца 3шт','Тунец/лосось 80г','Молоко 50мл','Зелень'], kcal:350, prot:36, time:10, store:'Любой', tip:'Без масла — легко'},
+    {name:'Сардины с рисом и салатом', items:['Сардины 120г','Рис 70г','Шпинат','Лимон'], kcal:400, prot:28, time:20, store:'Любой', tip:''},
+    {name:'Нут с форелью', items:['Нут конс. 150г','Форель 140г','Огурец','Оливк. масло'], kcal:450, prot:38, time:20, store:'Spar/Merkur', tip:''},
+    {name:'Мидии с пастой', items:['Мидии 180г','Nudeln 70г','Чеснок','Петрушка'], kcal:430, prot:26, time:15, store:'Spar', tip:''},
+    {name:'Рыбные котлеты паровые', items:['Лосось/треска фарш 180г','Яйцо 1шт','Рис 60г','Укроп'], kcal:390, prot:36, time:20, store:'Spar/Merkur', tip:'Без панировки'},
+    {name:'Осьминог с картофелем', items:['Oktopus 180г','Картофель 170г','Оливк. масло','Лимон'], kcal:380, prot:30, time:25, store:'Spar/Merkur', tip:''},
+    {name:'Суп с мидиями и рисом', items:['Мидии 150г','Рис 50г','Морковь','Бульон 400мл'], kcal:320, prot:22, time:20, store:'Spar', tip:'Лёгкий ужин'},
+  ],
+  последний_приём: [
+    {name:'Творог с мёдом', items:['Topfen 5% 130г','Мёд 1 ч.л.','Корица'], kcal:175, prot:16, time:2, store:'Любой', tip:'Казеин на ночь — строит мышцы'},
+    {name:'Греческий йогурт', items:['Joghurt греч. 150г','Мёд','Банан ½'], kcal:200, prot:12, time:2, store:'Spar', tip:''},
+    {name:'Тёплое молоко с мёдом', items:['Молоко 250мл','Мёд 1 ч.л.','Корица'], kcal:195, prot:8, time:3, store:'Любой', tip:'До 20:30!'},
+    {name:'Творог с орехами', items:['Topfen 130г','Грецкие орехи 20г','Мёд'], kcal:250, prot:17, time:2, store:'Любой', tip:''},
+    {name:'Ряженка', items:['Ряженка/Kefir 200мл','Мёд'], kcal:160, prot:7, time:1, store:'Billa/Spar', tip:'Лёгкий последний приём'},
+  ]
+};
+
+// Helper: get random meal from category
+function getRandomMeal(category){
+  const arr = MEAL_DB[category] || MEAL_DB.перекусы;
+  return arr[Math.floor(Math.random()*arr.length)];
+}
+
+// Get meal suggestion by time
+function getMealByTime(hour){
+  if(hour < 10) return getRandomMeal('завтраки');
+  if(hour < 12) return getRandomMeal('перекусы');
+  if(hour < 15) return getRandomMeal('обеды');
+  if(hour < 17) return getRandomMeal('перекусы');
+  if(hour < 19) return getRandomMeal('ужины');
+  if(hour < 20) return getRandomMeal('перекусы');
+  return getRandomMeal('последний_приём');
+}
 
 // Portion keywords → grams multiplier
 const PORTIONS = [
@@ -1038,46 +1251,34 @@ function mamaReply(text){
   }
 
   if(intent==='SUGGEST' || intent==='FRIDGE'){
-    // Check if user listed fridge contents
-    const hasFridgeList = /есть |имею |стоит |лежит |(яйц|творог|рыб|тунец|лосос|гречк|рис|овсянк|молок|сыр|кефир|креветк|мидии)/.test(t);
+    const hasFridgeList = /есть |имею |стоит |лежит |(яйц|творог|рыб|тунец|лосос|гречк|рис|овсянк|молок|сыр|кефир|креветк|мидии|форел|скумбр|сардин)/.test(t);
+    const hour = now.getHours();
+    const meal = getMealByTime(hour);
 
     if(hasFridgeList){
-      // Parse what they have and suggest meal
       const {found} = estimateMeal(text);
-      const hour = now.getHours();
-      const next = schedule.find(m=>m.status==='pending');
-      const mealType = next?.name || (hour<12?'завтрак':hour<16?'обед':hour<19?'ужин':'перекус');
-
-      // Build suggestion based on available ingredients
-      let suggestion = '';
-      if(found.includes('тунец') && (found.includes('гречк')||found.includes('рис')||found.includes('яйц')))
-        suggestion = `Тунец с гречкой и яйцом 🐟 Тунец 1 банка + гречка 80г + 1 яйцо вкрутую — ~480 ккал, 40г белка. Простой, быстрый, отличное железо!`;
-      else if(found.includes('яйц') && found.includes('творог'))
-        suggestion = `Паровой омлет с творогом 🥚 3 яйца + 50г творога + молоко — ~380 ккал, 32г белка. Мягко для желудка, без лишнего жира.`;
-      else if(found.includes('творог') && found.includes('молок'))
-        suggestion = `Творожная каша на молоке 🥛 Любая крупа 70г на молоке + творог 130г сверху + мёд — ~520 ккал, 28г белка. Отлично для желудка!`;
-      else if(found.includes('креветк') || found.includes('мидии') || found.includes('кальмар'))
-        suggestion = `Морепродукты тушёные с крупой 🦐 200г морепродуктов + крупа 70г + чеснок + лимон — ~460 ккал, 34г белка. Рекорд по железу!`;
-      else if(found.includes('лосос') || found.includes('скумбри') || found.includes('форел'))
-        suggestion = `Рыба на пару с крупой 🐟 160г рыбы + гречка/рис 80г + лимон — ~560 ккал, 40г белка. Максимум D3!`;
-      else if(found.includes('яйц'))
-        suggestion = `Яйца всмятку с хлебом 🥚 2-3 яйца + цельнозерновой хлеб 2 куска + огурец — ~380 ккал, 20г белка. Быстро и хорошо для желудка!`;
-      else if(found.includes('сыр') || found.includes('творог'))
-        suggestion = `Творог с орехами и мёдом 🧀 Творог 130г + орехи 30г + мёд — ~320 ккал, 20г белка. Отлично как перекус!`;
-      else
-        suggestion = `Напиши подробнее что именно есть — например "есть яйца, творог, тунец" — подберу точнее! 🧊`;
-
-      return `Отлично, работаем с тем что есть! 💚 На ${mealType}: ${suggestion} Без острых специй, жуй медленно — помним про грыжу.`;
+      // Match fridge to MEAL_DB
+      let bestMeal = null;
+      const cats = hour<10?'завтраки':hour<12?'перекусы':hour<16?'обеды':hour<19?'ужины':'последний_приём';
+      const allMeals = MEAL_DB[cats];
+      // Find meal where most ingredients match
+      let bestScore = 0;
+      allMeals.forEach(m=>{
+        const score = found.filter(f=>m.items.some(i=>i.toLowerCase().includes(f.substring(0,4)))).length;
+        if(score > bestScore){ bestScore=score; bestMeal=m; }
+      });
+      if(!bestMeal) bestMeal = meal;
+      return `Отлично, работаем с тем что есть! 💚 Предлагаю: **${bestMeal.name}** — ${bestMeal.items.join(', ')}. ~${bestMeal.kcal} ккал, ~${bestMeal.prot}г белка. Готовка: ${bestMeal.time} мин. 💡 ${bestMeal.tip} Без острого, жуй медленно!`;
     }
 
-    // No fridge list — ask for it or give time-based suggestion
-    const hour = now.getHours();
-    if(hour<10) return `На завтрак: каша на молоке + 2 яйца + мёд 🌅 ~550 ккал, 26г белка. Или напиши "у меня есть..." — подберу из того что дома!`;
-    if(hour<13) return `Перекус: творог 5% 130г с мёдом + ягоды 🫐 ~220 ккал, 18г белка. Нет творога? Напиши что есть дома — найдём вариант!`;
-    if(hour<16) return `На обед лучше рыба или морепродукты + крупа 🐟 Напиши что есть в холодильнике — подберу конкретный вариант!`;
-    if(hour<18) return `Перекус: орехи 35г + кефир 🥛 ~310 ккал. Нет орехов? Напиши что есть — придумаем что-то!`;
-    if(hour<19) return `На ужин лучше морепродукты или рыба + крупа 🦪 Напиши что есть дома — не рыба, так найдём замену!`;
-    return `Поздновато — творог 5% 130г с мёдом 🌙 ~210 ккал, казеин для мышц. Последний приём строго до 20:30!`;
+    // Time-based suggestion from MEAL_DB
+    return `Сейчас хорошо подойдёт: **${meal.name}** 🍽️
+${meal.items.join(' · ')}
+~${meal.kcal} ккал · ~${meal.prot}г белка · ${meal.time} мин
+🛒 ${meal.store}
+💡 ${meal.tip}
+
+Напиши "что есть дома" — подберу из твоих продуктов!`;
   }
 
   if(intent==='TOMORROW'){
@@ -1117,6 +1318,239 @@ function sendMessage(){
   }, 600 + Math.random()*400);
 }
 
+// ========== SHOPPING LIST DATA ==========
+const SHOP_CATEGORIES = [
+  {cat:'🐟 Рыба и морепродукты', items:[
+    {name:'Лосось (филе)', qty:'500г', store:'Spar/Merkur'},
+    {name:'Скумбрия', qty:'400г', store:'Spar/Hofer'},
+    {name:'Тунец в собственном соку', qty:'4 банки', store:'Любой'},
+    {name:'Мидии (свежие/заморож.)', qty:'500г', store:'Spar/Merkur'},
+    {name:'Креветки (заморожен.)', qty:'400г', store:'Spar/Merkur'},
+    {name:'Форель', qty:'300г', store:'Spar/Fischmarkt'},
+    {name:'Сардины (консервы)', qty:'2 банки', store:'Любой'},
+    {name:'Треска (Kabeljau)', qty:'300г', store:'Spar/Billa'},
+  ]},
+  {cat:'🥚 Яйца и молочные', items:[
+    {name:'Яйца', qty:'20шт', store:'Любой'},
+    {name:'Topfen 5% (творог)', qty:'1кг', store:'Spar/Billa'},
+    {name:'Молоко 3.5%', qty:'2л', store:'Любой'},
+    {name:'Joghurt греческий', qty:'500г', store:'Spar/Billa'},
+    {name:'Buttermilch (кефир)', qty:'1л', store:'Любой'},
+    {name:'Käse Gouda (сыр)', qty:'200г', store:'Любой'},
+    {name:'Butter (масло слив.)', qty:'250г', store:'Любой'},
+    {name:'Obers 20% (сливки)', qty:'200мл', store:'Spar/Billa'},
+  ]},
+  {cat:'🌾 Крупы и злаки', items:[
+    {name:'Haferflocken (овсянка)', qty:'500г', store:'Hofer/Spar'},
+    {name:'Buchweizen (гречка)', qty:'500г', store:'Billa/Merkur'},
+    {name:'Reis (рис)', qty:'1кг', store:'Любой'},
+    {name:'Hirse (пшено)', qty:'500г', store:'Billa/Merkur'},
+    {name:'Quinoa', qty:'400г', store:'Billa/Merkur'},
+    {name:'Linsen rot (чечевица)', qty:'500г', store:'Spar/Billa'},
+    {name:'Nudeln (паста)', qty:'500г', store:'Любой'},
+    {name:'Kichererbsen (нут, банка)', qty:'2 банки', store:'Spar/Billa'},
+    {name:'Polenta', qty:'500г', store:'Spar/Merkur'},
+  ]},
+  {cat:'🥑 Овощи и фрукты', items:[
+    {name:'Бананы', qty:'7шт', store:'Любой'},
+    {name:'Äpfel (яблоки)', qty:'6шт', store:'Любой'},
+    {name:'Avocado', qty:'3шт', store:'Spar/Billa'},
+    {name:'Gurke (огурцы)', qty:'4шт', store:'Любой'},
+    {name:'Tomaten (помидоры)', qty:'500г', store:'Любой'},
+    {name:'Spinat (шпинат)', qty:'300г', store:'Spar/Billa'},
+    {name:'Brokkoli', qty:'400г', store:'Spar/Billa'},
+    {name:'Zucchini', qty:'3шт', store:'Любой'},
+    {name:'Karotten (морковь)', qty:'500г', store:'Любой'},
+    {name:'Erdäpfel (картофель)', qty:'1кг', store:'Любой'},
+    {name:'Blaubeeren (черника, заморожен.)', qty:'400г', store:'Hofer/Spar'},
+    {name:'Himbeeren (малина, заморожен.)', qty:'300г', store:'Hofer/Spar'},
+  ]},
+  {cat:'🥜 Орехи и масла', items:[
+    {name:'Walnüsse (грецкие орехи)', qty:'200г', store:'Любой'},
+    {name:'Mandeln (миндаль)', qty:'200г', store:'Hofer/Spar'},
+    {name:'Kürbiskerne (тыкв. семечки)', qty:'150г', store:'Spar/Billa'},
+    {name:'Olivenöl (оливк. масло)', qty:'500мл', store:'Любой'},
+    {name:'Erdnussbutter (арах. паста)', qty:'1 банка', store:'Hofer/Spar'},
+    {name:'Chia Samen (чиа)', qty:'200г', store:'Billa/Merkur'},
+    {name:'Honig (мёд)', qty:'500г', store:'Любой'},
+  ]},
+  {cat:'🍞 Хлеб и прочее', items:[
+    {name:'Vollkornbrot (цельноз. хлеб)', qty:'1 буханка', store:'Любой'},
+    {name:'Knäckebrot (хлебцы)', qty:'1 пачка', store:'Любой'},
+    {name:'Fladenbrot (лепёшка)', qty:'2шт', store:'Spar/Billa'},
+    {name:'Hummus', qty:'200г', store:'Spar/Billa'},
+    {name:'Leinöl (льняное масло)', qty:'250мл', store:'Billa/Merkur'},
+  ]},
+];
+
+let shopState = JSON.parse(localStorage.getItem('shopState') || '{}');
+let selectedMealForSlot = null;
+
+function renderShopList(){
+  const wrap = document.getElementById('shopList');
+  wrap.innerHTML = '';
+  SHOP_CATEGORIES.forEach((cat,ci)=>{
+    const h = document.createElement('div');
+    h.className='shop-cat';
+    h.textContent=cat.cat;
+    wrap.appendChild(h);
+    const block = document.createElement('div');
+    block.className='shop-items';
+    cat.items.forEach((item,ii)=>{
+      const key=`${ci}_${ii}`;
+      const done = shopState[key];
+      const row = document.createElement('div');
+      row.className='shop-row';
+      row.onclick=()=>toggleShopItem(key,ci,ii);
+      row.innerHTML=`
+        <div class="shop-check-box ${done?'done'}">${done?'✓':''}</div>
+        <div class="shop-row-text">
+          <div class="shop-row-name ${done?'done'}">${item.name}</div>
+          <div class="shop-row-detail">${item.qty}</div>
+        </div>
+        <div class="shop-row-store">${item.store}</div>`;
+      block.appendChild(row);
+    });
+    wrap.appendChild(block);
+  });
+}
+
+function toggleShopItem(key,ci,ii){
+  shopState[key]=!shopState[key];
+  localStorage.setItem('shopState',JSON.stringify(shopState));
+  renderShopList();
+}
+
+function clearChecked(){
+  Object.keys(shopState).forEach(k=>{if(shopState[k]) delete shopState[k];});
+  localStorage.setItem('shopState',JSON.stringify(shopState));
+  renderShopList();
+  toast('Купленное убрано ✅','ok');
+}
+
+function resetShop(){
+  shopState={};
+  localStorage.setItem('shopState',JSON.stringify(shopState));
+  renderShopList();
+  toast('Список сброшен 🔄','ok');
+}
+
+// ========== MEAL PICKER ==========
+function getMealCategory(mealIdx){
+  if(mealIdx===0) return 'завтраки';
+  if(mealIdx===2) return 'обеды';
+  if(mealIdx===4) return 'ужины';
+  if(mealIdx===6) return 'последний_приём';
+  return 'перекусы';
+}
+
+function renderMealPicker(mealIdx){
+  const cat = getMealCategory(mealIdx);
+  const meals = MEAL_DB[cat] || MEAL_DB.перекусы;
+  const wrap = document.getElementById('mealPickerList');
+  wrap.innerHTML='';
+  selectedMealForSlot=null;
+  document.getElementById('selectedMealSection').style.display='none';
+  document.getElementById('fridgeSection').style.display='none';
+  document.getElementById('mealPickerSection').style.display='block';
+  document.getElementById('fridgeSuggestion').style.display='none';
+
+  meals.forEach((meal,i)=>{
+    const div=document.createElement('div');
+    div.className='meal-pick-item';
+    div.innerHTML=`<div class="mp-name">${meal.name}</div>
+      <div class="mp-detail">${meal.items.slice(0,3).join(' · ')}${meal.items.length>3?' …':''}</div>
+      <div class="mp-nut">🔥${meal.kcal}ккал · 💪${meal.prot}г · ⏱${meal.time}мин · 🛒${meal.store}</div>`;
+    div.onclick=()=>selectMeal(meal,div);
+    wrap.appendChild(div);
+  });
+}
+
+function selectMeal(meal,el){
+  document.querySelectorAll('.meal-pick-item').forEach(d=>d.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedMealForSlot=meal;
+  document.getElementById('selectedMealSection').style.display='block';
+  document.getElementById('selectedMealName').textContent=meal.name;
+  document.getElementById('selectedMealItems').textContent=meal.items.join(' · ');
+  document.getElementById('selectedMealNut').textContent=`🔥${meal.kcal}ккал · 💪${meal.prot}г белка · ⏱${meal.time}мин`;
+  el.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+function showFridgeInput(){
+  document.getElementById('fridgeSection').style.display='block';
+  document.getElementById('fridgeInputText').focus();
+}
+
+function suggestFromFridge(){
+  const text = document.getElementById('fridgeInputText').value;
+  if(!text.trim()){toast('Напиши что есть дома','warn');return;}
+  const {found} = estimateMeal(text);
+  const cat = getMealCategory(currentIdx);
+  const meals = MEAL_DB[cat] || MEAL_DB.перекусы;
+  let bestMeal=meals[0], bestScore=0;
+  meals.forEach(m=>{
+    const score=found.filter(f=>m.items.some(i=>i.toLowerCase().includes(f.substring(0,4)))).length;
+    if(score>bestScore){bestScore=score;bestMeal=m;}
+  });
+  const sug=document.getElementById('fridgeSuggestion');
+  sug.style.display='block';
+  sug.innerHTML=`<div style="font-size:12px;color:var(--green);font-weight:800;margin-bottom:4px;">✨ Лучший вариант:</div>
+    <div style="font-size:14px;font-weight:800;">${bestMeal.name}</div>
+    <div style="font-size:11px;color:var(--muted);margin-top:3px;">${bestMeal.items.join(' · ')}</div>
+    <div style="font-size:11px;color:var(--amber);margin-top:3px;">🔥${bestMeal.kcal}ккал · 💪${bestMeal.prot}г · ⏱${bestMeal.time}мин</div>
+    <div style="font-size:11px;color:var(--teal);margin-top:2px;">💡 ${bestMeal.tip}</div>
+    <button onclick="selectMealFromFridge()" style="width:100%;margin-top:8px;padding:8px;border-radius:8px;background:var(--green-bg);border:1px solid rgba(74,222,128,0.3);color:var(--green);font-size:12px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif;">Выбрать это блюдо</button>`;
+  selectedMealForSlot=bestMeal;
+}
+
+function selectMealFromFridge(){
+  const meal=selectedMealForSlot;
+  document.getElementById('selectedMealSection').style.display='block';
+  document.getElementById('selectedMealName').textContent=meal.name;
+  document.getElementById('selectedMealItems').textContent=meal.items.join(' · ');
+  document.getElementById('selectedMealNut').textContent=`🔥${meal.kcal}ккал · 💪${meal.prot}г белка`;
+  toast('Блюдо выбрано! Нажми "Поел" когда поешь','ok');
+}
+
+function markDoneWithMeal(i){
+  if(i<0||i>=schedule.length)return;
+  const n=new Date();
+  const actual=n.toLocaleTimeString('ru',{hour:'2-digit',minute:'2-digit'});
+  const planned=toMins(schedule[i].time);
+  const actualMins=n.getHours()*60+n.getMinutes();
+  const delay=actualMins-planned;
+  schedule[i].status='done';
+  schedule[i].actualTime=actual;
+  if(selectedMealForSlot){
+    schedule[i].customMeal={
+      name:selectedMealForSlot.name,
+      items:selectedMealForSlot.items,
+      kcal:selectedMealForSlot.kcal,
+      prot:selectedMealForSlot.prot
+    };
+  }
+  if(delay>25){
+    let shifted=0;
+    for(let j=i+1;j<schedule.length;j++){
+      if(schedule[j].status==='pending'){
+        const newT=Math.min(toMins(schedule[j].time)+delay,20*60+30);
+        schedule[j].time=fromMins(newT);shifted++;
+      }
+    }
+    if(shifted>0){
+      document.getElementById('lateBanner').classList.add('show');
+      document.getElementById('lateText').textContent=`Сдвинула ${shifted} приёмов на ~${Math.round(delay)} мин`;
+      toast(`Расписание сдвинуто на ${Math.round(delay)} мин 📅`,'warn');
+    }
+  } else {
+    const mealName=selectedMealForSlot?selectedMealForSlot.name:schedule[i].name;
+    toast(`${mealName} ✅ Молодец!`,'ok');
+  }
+  selectedMealForSlot=null;
+  save(); closeOverlay('mealOverlay'); renderHome();
+}
+
 // ========== PAGE SWITCH ==========
 function switchPage(name,btn){
   document.querySelectorAll('.page,.chat-page').forEach(p=>p.classList.remove('active'));
@@ -1126,6 +1560,7 @@ function switchPage(name,btn){
   if(name!=='chat') document.getElementById('mainScroll').scrollTop=0;
   if(name==='settings') renderSettings();
   if(name==='water'){renderWater();renderKcalChart();}
+  if(name==='shop') renderShopList();
 }
 
 // ========== TOAST ==========
@@ -1148,6 +1583,7 @@ window.onload=()=>{
   renderSettings();
   renderQuickActions();
 
+  renderShopList();
   // Welcome chat message
   const hour=new Date().getHours();
   const greeting=hour<10?'Доброе утро':hour<14?'Привет':hour<18?'Добрый день':'Добрый вечер';
