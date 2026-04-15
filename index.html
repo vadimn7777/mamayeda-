@@ -1,0 +1,1159 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="МамаЕда">
+<title>МамаЕда 2.0</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+:root{
+  --bg:#0f0f14;--surface:#1a1a24;--surface2:#22222f;--surface3:#2a2a3a;
+  --border:#2e2e42;--text:#f0f0f8;--muted:#7a7a9a;--dim:#4a4a6a;
+  --green:#4ade80;--green-bg:rgba(74,222,128,0.1);
+  --blue:#60a5fa;--blue-bg:rgba(96,165,250,0.1);
+  --amber:#fbbf24;--amber-bg:rgba(251,191,36,0.1);
+  --red:#f87171;--red-bg:rgba(248,113,113,0.1);
+  --purple:#c084fc;--teal:#2dd4bf;--teal-bg:rgba(45,212,191,0.1);
+  --grad:linear-gradient(135deg,#4ade80,#2dd4bf);
+  --safe-top:env(safe-area-inset-top,20px);
+  --safe-bot:env(safe-area-inset-bottom,20px);
+}
+html,body{height:100%;overflow:hidden;background:var(--bg);}
+body{font-family:'Nunito',sans-serif;color:var(--text);display:flex;flex-direction:column;max-width:430px;margin:0 auto;}
+
+/* HEADER */
+.app-header{padding:calc(var(--safe-top) + 10px) 16px 10px;background:var(--bg);border-bottom:1px solid var(--border);flex-shrink:0;z-index:10;}
+.header-row{display:flex;align-items:center;justify-content:space-between;}
+.logo{display:flex;align-items:center;gap:8px;}
+.logo-icon{width:34px;height:34px;border-radius:10px;background:var(--grad);display:flex;align-items:center;justify-content:center;font-size:17px;}
+.logo-name{font-size:18px;font-weight:900;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.clock-wrap{text-align:right;}
+.clock{font-size:20px;font-weight:900;letter-spacing:-1px;}
+.date-str{font-size:10px;color:var(--muted);}
+
+/* SCROLL */
+.scroll{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding-bottom:calc(var(--safe-bot) + 76px);}
+.scroll::-webkit-scrollbar{display:none;}
+
+/* BOTTOM NAV */
+.bnav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:rgba(15,15,20,0.96);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:1px solid var(--border);padding:8px 0 calc(var(--safe-bot) + 4px);display:flex;z-index:100;}
+.nb{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:4px;cursor:pointer;border:none;background:none;color:var(--muted);font-family:'Nunito',sans-serif;font-size:9px;font-weight:700;transition:color 0.2s;}
+.nb.active{color:var(--green);}
+.nb-icon{font-size:21px;line-height:1;}
+
+/* PAGES */
+.page{display:none;padding:14px 14px 0;}
+.page.active{display:block;}
+
+/* CHAT UI */
+.chat-page{display:none;flex-direction:column;height:100%;}
+.chat-page.active{display:flex;}
+.chat-messages{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px;padding-bottom:0;}
+.chat-messages::-webkit-scrollbar{display:none;}
+
+.msg{display:flex;gap:8px;margin-bottom:12px;animation:msgIn 0.3s ease;}
+@keyframes msgIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+.msg.user{flex-direction:row-reverse;}
+.msg-avatar{width:30px;height:30px;border-radius:50%;background:var(--grad);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;margin-top:2px;}
+.msg-avatar.user-av{background:var(--surface2);border:1px solid var(--border);}
+.msg-bubble{max-width:80%;padding:10px 13px;border-radius:16px;font-size:14px;line-height:1.5;}
+.msg.ai .msg-bubble{background:var(--surface);border:1px solid var(--border);border-top-left-radius:4px;}
+.msg.user .msg-bubble{background:linear-gradient(135deg,rgba(74,222,128,0.2),rgba(45,212,191,0.2));border:1px solid rgba(74,222,128,0.3);border-top-right-radius:4px;}
+.msg-time{font-size:10px;color:var(--dim);margin-top:4px;}
+
+/* QUICK ACTIONS */
+.quick-actions{padding:8px 14px;display:flex;gap:6px;overflow-x:auto;flex-shrink:0;}
+.quick-actions::-webkit-scrollbar{display:none;}
+.qa{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:6px 12px;font-size:12px;font-weight:700;color:var(--muted);white-space:nowrap;cursor:pointer;font-family:'Nunito',sans-serif;transition:all 0.2s;flex-shrink:0;}
+.qa:active{background:var(--green-bg);border-color:rgba(74,222,128,0.4);color:var(--green);}
+
+/* CHAT INPUT */
+.chat-input-wrap{padding:10px 14px calc(var(--safe-bot) + 80px);flex-shrink:0;background:var(--bg);}
+.chat-input-row{display:flex;gap:8px;align-items:flex-end;}
+.chat-input{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:10px 14px;font-size:14px;color:var(--text);font-family:'Nunito',sans-serif;outline:none;resize:none;max-height:100px;line-height:1.4;}
+.chat-input:focus{border-color:rgba(74,222,128,0.4);}
+.chat-input::placeholder{color:var(--dim);}
+.send-btn{width:40px;height:40px;border-radius:50%;background:var(--grad);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;flex-shrink:0;transition:transform 0.15s;}
+.send-btn:active{transform:scale(0.9);}
+.send-btn.loading{animation:spin 1s linear infinite;}
+@keyframes spin{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
+
+/* HOME CARDS */
+.sec{font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin:14px 0 8px;}
+.sec:first-child{margin-top:0;}
+
+.today-card{background:linear-gradient(135deg,#111e11,#111824);border:1px solid rgba(74,222,128,0.2);border-radius:18px;padding:14px;margin-bottom:10px;}
+.today-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+.today-label{font-size:11px;color:var(--green);font-weight:800;text-transform:uppercase;letter-spacing:0.5px;}
+.today-kcal{font-size:11px;color:var(--muted);}
+.progress-bar{height:6px;background:var(--surface2);border-radius:3px;overflow:hidden;margin-bottom:8px;}
+.progress-fill{height:100%;border-radius:3px;background:var(--grad);transition:width 0.5s;}
+.macros-row{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;}
+.macro{background:var(--surface2);border-radius:10px;padding:8px;text-align:center;}
+.macro-val{font-size:16px;font-weight:900;}
+.macro-lbl{font-size:9px;color:var(--muted);font-weight:700;}
+
+.next-card{background:var(--surface);border:1px solid var(--amber-bg);border-radius:16px;padding:13px;margin-bottom:10px;cursor:pointer;}
+.next-card:active{opacity:0.8;}
+.next-label{font-size:10px;color:var(--amber);font-weight:800;text-transform:uppercase;margin-bottom:4px;}
+.next-row{display:flex;justify-content:space-between;align-items:flex-start;}
+.next-time{font-size:24px;font-weight:900;color:var(--amber);letter-spacing:-1px;}
+.next-countdown{background:var(--amber-bg);border-radius:20px;padding:3px 10px;font-size:11px;font-weight:800;color:var(--amber);}
+.next-name{font-size:16px;font-weight:800;margin:4px 0 2px;}
+.next-desc{font-size:12px;color:var(--muted);line-height:1.4;}
+
+/* SCHEDULE */
+.tl{position:relative;}
+.tl::before{content:'';position:absolute;left:17px;top:0;bottom:0;width:2px;background:var(--border);}
+.tl-item{display:flex;gap:12px;margin-bottom:8px;cursor:pointer;}
+.tl-dot{width:18px;height:18px;border-radius:50%;flex-shrink:0;margin-top:11px;display:flex;align-items:center;justify-content:center;font-size:7px;font-weight:900;position:relative;z-index:1;}
+.tl-dot.done{background:var(--green);color:#000;}
+.tl-dot.active-dot{background:var(--amber);color:#000;box-shadow:0 0 0 4px rgba(251,191,36,0.2);animation:pdot 2s infinite;}
+@keyframes pdot{0%,100%{box-shadow:0 0 0 0 rgba(251,191,36,0.4);}50%{box-shadow:0 0 0 6px rgba(251,191,36,0);}}
+.tl-dot.pending{background:var(--surface2);border:2px solid var(--border);}
+.tl-dot.skipped{background:var(--red-bg);border:2px solid rgba(248,113,113,0.3);color:var(--red);}
+.tl-card{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:13px;padding:10px 12px;transition:all 0.2s;}
+.tl-card.done{opacity:0.55;}
+.tl-card.active-card{border-color:rgba(251,191,36,0.35);background:rgba(251,191,36,0.04);}
+.tl-card.skipped{opacity:0.4;border-style:dashed;}
+.tl-top{display:flex;justify-content:space-between;align-items:center;}
+.tl-time-lbl{font-size:11px;color:var(--muted);font-weight:700;}
+.tl-name{font-size:13px;font-weight:800;margin:2px 0;}
+.tl-desc{font-size:11px;color:var(--muted);}
+.tl-footer{display:flex;align-items:center;gap:6px;margin-top:6px;}
+.tl-kcal{font-size:10px;font-weight:700;color:var(--amber);}
+.tl-prot{font-size:10px;font-weight:700;color:var(--blue);}
+.done-btn{margin-left:auto;background:var(--green-bg);border:1px solid rgba(74,222,128,0.3);border-radius:14px;padding:3px 10px;font-size:10px;font-weight:800;color:var(--green);cursor:pointer;font-family:'Nunito',sans-serif;}
+
+/* WATER */
+.water-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:14px;margin-bottom:10px;}
+.water-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+.water-title{font-size:14px;font-weight:800;}
+.water-num{font-size:20px;font-weight:900;color:var(--blue);}
+.glasses{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px;}
+.glass{width:32px;height:40px;border-radius:4px 4px 7px 7px;border:2px solid var(--border);cursor:pointer;display:flex;align-items:flex-end;overflow:hidden;transition:border-color 0.2s;}
+.glass.filled{border-color:var(--blue);}
+.gfill{width:100%;background:linear-gradient(180deg,rgba(96,165,250,0.6),rgba(96,165,250,1));transition:height 0.3s;}
+.glass:not(.filled) .gfill{height:0;}
+.glass.filled .gfill{height:100%;}
+.water-btn-row{display:flex;gap:8px;}
+.water-btn{flex:1;background:var(--blue-bg);border:1px solid rgba(96,165,250,0.3);border-radius:12px;padding:9px;font-size:12px;font-weight:800;color:var(--blue);cursor:pointer;font-family:'Nunito',sans-serif;}
+
+/* TRACK */
+.track-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:14px;margin-bottom:10px;}
+.track-title{font-size:14px;font-weight:800;margin-bottom:10px;}
+.mood-row{display:flex;gap:6px;}
+.mood-btn{flex:1;padding:8px 4px;border-radius:10px;border:2px solid var(--border);background:none;font-size:20px;cursor:pointer;transition:all 0.2s;font-family:'Nunito',sans-serif;}
+.mood-btn.sel{border-color:var(--green);background:var(--green-bg);}
+.weight-row{display:flex;gap:8px;margin-top:8px;}
+.w-input{flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:9px 12px;font-size:17px;font-weight:800;color:var(--text);font-family:'Nunito',sans-serif;outline:none;text-align:center;}
+.w-input:focus{border-color:var(--green);}
+.w-save{background:var(--grad);border:none;border-radius:12px;padding:9px 18px;font-size:13px;font-weight:800;color:#000;cursor:pointer;font-family:'Nunito',sans-serif;}
+.reflux-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px;}
+.rx-btn{padding:9px;border-radius:10px;border:2px solid var(--border);background:none;font-size:12px;font-weight:700;color:var(--text);cursor:pointer;font-family:'Nunito',sans-serif;text-align:left;transition:all 0.2s;}
+.rx-btn.sel{border-color:var(--red);background:var(--red-bg);color:var(--red);}
+.save-rx{width:100%;margin-top:8px;padding:10px;border-radius:12px;background:var(--surface2);border:1px solid var(--border);color:var(--text);font-size:13px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif;}
+
+/* CHART */
+.chart-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:14px;margin-bottom:10px;}
+.chart-title{font-size:14px;font-weight:800;margin-bottom:10px;}
+.bars{display:flex;align-items:flex-end;gap:5px;height:70px;}
+.bwrap{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;}
+.bar{width:100%;border-radius:3px 3px 0 0;min-height:3px;}
+.blbl{font-size:9px;color:var(--muted);font-weight:700;}
+
+/* MODAL */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:200;display:none;align-items:flex-end;backdrop-filter:blur(4px);}
+.overlay.open{display:flex;}
+.modal{width:100%;max-width:430px;margin:0 auto;background:var(--surface);border-radius:22px 22px 0 0;padding:18px 18px calc(var(--safe-bot) + 18px);max-height:80vh;overflow-y:auto;}
+.modal-handle{width:36px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 14px;}
+.modal-title{font-size:18px;font-weight:900;margin-bottom:12px;}
+.mbtn{width:100%;padding:13px;border-radius:13px;border:none;font-size:14px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif;margin-bottom:8px;}
+.mbtn.primary{background:var(--grad);color:#000;}
+.mbtn.sec{background:var(--surface2);color:var(--text);}
+.mbtn.danger{background:var(--red-bg);color:var(--red);border:1px solid rgba(248,113,113,0.3);}
+.meal-detail{margin:10px 0;background:var(--surface2);border-radius:12px;padding:10px 12px;}
+.meal-detail-item{padding:6px 0;border-bottom:1px solid var(--border);font-size:13px;}
+.meal-detail-item:last-child{border:none;}
+.nut-row{display:flex;gap:8px;margin:10px 0;}
+.nut-cell{flex:1;background:var(--surface2);border-radius:10px;padding:8px;text-align:center;}
+.nut-val{font-size:16px;font-weight:900;}
+.nut-lbl{font-size:9px;color:var(--muted);font-weight:700;}
+
+/* TOAST */
+.toast{position:fixed;top:calc(var(--safe-top) + 56px);left:50%;transform:translateX(-50%) translateY(-15px);border-radius:18px;padding:9px 18px;font-size:12px;font-weight:800;z-index:300;opacity:0;transition:all 0.3s;white-space:nowrap;pointer-events:none;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.toast.ok{background:var(--green);color:#000;}
+.toast.warn{background:var(--amber);color:#000;}
+.toast.info{background:var(--blue);color:#fff;}
+
+/* LATE BANNER */
+.late-banner{background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.25);border-radius:12px;padding:10px 13px;margin-bottom:10px;display:none;}
+.late-banner.show{display:block;}
+.late-title{font-size:12px;font-weight:800;color:var(--amber);}
+.late-sub{font-size:11px;color:rgba(251,191,36,0.6);margin-top:1px;}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+</style>
+</head>
+<body>
+
+<div class="app-header">
+  <div class="header-row">
+    <div class="logo">
+      <div class="logo-icon">🌿</div>
+      <div class="logo-name">МамаЕда 2.0</div>
+    </div>
+    <div class="clock-wrap">
+      <div class="clock" id="clock">--:--</div>
+      <div class="date-str" id="dateStr">—</div>
+    </div>
+  </div>
+</div>
+
+<div class="scroll" id="mainScroll">
+
+  <!-- HOME -->
+  <div class="page active" id="page-home">
+    <div class="late-banner" id="lateBanner">
+      <div class="late-title">⏰ Расписание скорректировано</div>
+      <div class="late-sub" id="lateText">—</div>
+    </div>
+
+    <div class="today-card">
+      <div class="today-row">
+        <div class="today-label">📊 Сегодня</div>
+        <div class="today-kcal" id="kcalText">0 / 2700 ккал</div>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" id="kcalBar" style="width:0%"></div></div>
+      <div class="macros-row">
+        <div class="macro"><div class="macro-val" id="mProtein" style="color:var(--blue)">0г</div><div class="macro-lbl">Белок</div></div>
+        <div class="macro"><div class="macro-val" id="mMeals" style="color:var(--green)">0/7</div><div class="macro-lbl">Приёмы</div></div>
+        <div class="macro"><div class="macro-val" id="mWater" style="color:var(--teal)">0</div><div class="macro-lbl">Стаканов</div></div>
+      </div>
+    </div>
+
+    <div class="next-card" id="nextCard" onclick="openNextModal()">
+      <div class="next-label">⏰ Следующий приём</div>
+      <div class="next-row">
+        <div class="next-time" id="nextTime">--:--</div>
+        <div class="next-countdown" id="nextCd">—</div>
+      </div>
+      <div class="next-name" id="nextName">—</div>
+      <div class="next-desc" id="nextDesc">—</div>
+    </div>
+
+    <div class="sec">🗓 Расписание</div>
+    <div class="tl" id="timeline"></div>
+  </div>
+
+  <!-- CHAT PAGE (not in scroll, handled separately) -->
+
+  <!-- WATER -->
+  <div class="page" id="page-water">
+    <div class="water-card">
+      <div class="water-hdr">
+        <div class="water-title">💧 Вода сегодня</div>
+        <div class="water-num"><span id="wCount">0</span>/12</div>
+      </div>
+      <div class="glasses" id="glassesWrap"></div>
+      <div class="water-btn-row">
+        <button class="water-btn" onclick="addWater(1)">+ 1 стакан</button>
+        <button class="water-btn" onclick="addWater(2)">+ 2 стакана</button>
+      </div>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-title">💧 Вода за неделю</div>
+      <div class="bars" id="waterChart"></div>
+    </div>
+
+    <div class="track-card">
+      <div class="track-title">⚡ Самочувствие</div>
+      <div class="mood-row">
+        <button class="mood-btn" onclick="setEnergy(1)" id="e1">😴</button>
+        <button class="mood-btn" onclick="setEnergy(2)" id="e2">😐</button>
+        <button class="mood-btn" onclick="setEnergy(3)" id="e3">🙂</button>
+        <button class="mood-btn" onclick="setEnergy(4)" id="e4">😊</button>
+        <button class="mood-btn" onclick="setEnergy(5)" id="e5">🚀</button>
+      </div>
+    </div>
+
+    <div class="track-card">
+      <div class="track-title">⚖️ Вес</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:8px;">Прогресс к цели 75 кг: <span id="wProgress" style="color:var(--green);font-weight:800;">0%</span></div>
+      <div class="weight-row">
+        <input class="w-input" type="number" id="wInput" placeholder="55.0" step="0.1" min="40" max="200">
+        <button class="w-save" onclick="saveWeight()">Сохранить</button>
+      </div>
+    </div>
+
+    <div class="track-card">
+      <div class="track-title">🫁 Симптомы</div>
+      <div class="reflux-grid">
+        <button class="rx-btn" onclick="toggleRx(this,'Кислый вкус')">😮 Кислый вкус</button>
+        <button class="rx-btn" onclick="toggleRx(this,'Тяжесть')">🪨 Тяжесть</button>
+        <button class="rx-btn" onclick="toggleRx(this,'Запах')">💨 Запах</button>
+        <button class="rx-btn" onclick="toggleRx(this,'Изжога')">🔥 Изжога</button>
+        <button class="rx-btn" onclick="toggleRx(this,'Ком в горле')">🤐 Ком в горле</button>
+        <button class="rx-btn" onclick="toggleRx(this,'Всё хорошо')">✅ Всё хорошо</button>
+      </div>
+      <button class="save-rx" onclick="saveRx()">Записать симптомы</button>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-title">📈 Ккал за неделю</div>
+      <div class="bars" id="kcalChart"></div>
+    </div>
+  </div>
+
+  <!-- SETTINGS -->
+  <div class="page" id="page-settings">
+    <div class="sec" style="margin-top:0">👤 Профиль</div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:14px;margin-bottom:10px;">
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">
+        <div class="macro"><div class="macro-val" style="color:var(--teal)">36</div><div class="macro-lbl">лет</div></div>
+        <div class="macro"><div class="macro-val" style="color:var(--purple)">179см</div><div class="macro-lbl">рост</div></div>
+        <div class="macro"><div class="macro-val" id="wNow" style="color:var(--amber)">55кг</div><div class="macro-lbl">вес</div></div>
+      </div>
+    </div>
+
+    <div class="sec">⚕️ Диагнозы (учтены)</div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden;margin-bottom:10px;">
+      <div style="padding:12px 14px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;font-size:13px;">
+        <span>🫀 Склеродермия</span><span style="color:var(--green);font-size:11px;font-weight:800;">✓ учтено</span>
+      </div>
+      <div style="padding:12px 14px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;font-size:13px;">
+        <span>🫁 Хиатальная грыжа</span><span style="color:var(--green);font-size:11px;font-weight:800;">✓ учтено</span>
+      </div>
+      <div style="padding:12px 14px;display:flex;justify-content:space-between;align-items:center;font-size:13px;">
+        <span>🔴 Ферритин + D3</span><span style="color:var(--green);font-size:11px;font-weight:800;">✓ учтено</span>
+      </div>
+    </div>
+
+    <div class="sec">🔔 Напоминания</div>
+    <div id="reminderSettings" style="background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden;margin-bottom:10px;"></div>
+
+    <div class="sec">⏰ Текущее расписание</div>
+    <div id="schedList" style="background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden;margin-bottom:10px;"></div>
+
+    <button onclick="resetDay()" style="width:100%;padding:12px;border-radius:13px;background:var(--red-bg);border:1px solid rgba(248,113,113,0.3);color:var(--red);font-size:13px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif;margin-bottom:10px;">🔄 Сбросить расписание на сегодня</button>
+  </div>
+
+</div><!-- end scroll -->
+
+<!-- CHAT (outside scroll, full height) -->
+<div class="chat-page" id="page-chat">
+  <div class="chat-messages" id="chatMessages"></div>
+  <div class="quick-actions" id="quickActions"></div>
+  <div class="chat-input-wrap">
+    <div class="chat-input-row">
+      <textarea class="chat-input" id="chatInput" placeholder="Напиши что поел или когда поешь…" rows="1" onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
+      <button class="send-btn" id="sendBtn" onclick="sendMessage()">➤</button>
+    </div>
+  </div>
+</div>
+
+<!-- BOTTOM NAV -->
+<nav class="bnav">
+  <button class="nb active" onclick="switchPage('home',this)"><div class="nb-icon">🏠</div><span>День</span></button>
+  <button class="nb" onclick="switchPage('chat',this)"><div class="nb-icon">💬</div><span>Мама</span></button>
+  <button class="nb" onclick="switchPage('water',this)"><div class="nb-icon">📊</div><span>Трекер</span></button>
+  <button class="nb" onclick="switchPage('settings',this)"><div class="nb-icon">⚙️</div><span>Настройки</span></button>
+</nav>
+
+<!-- MEAL MODAL -->
+<div class="overlay" id="mealOverlay" onclick="closeOverlay('mealOverlay')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="modalTitle">—</div>
+    <div class="nut-row" id="modalNut"></div>
+    <div class="meal-detail" id="modalItems"></div>
+    <div style="background:var(--amber-bg);border-radius:10px;padding:9px 12px;margin-bottom:10px;font-size:12px;color:rgba(251,191,36,0.85);">🫁 Жуй медленно · После еды не ложись 2–3ч · Ужин до 20:30</div>
+    <button class="mbtn primary" onclick="markDone(currentIdx)">✅ Поел — отметить</button>
+    <button class="mbtn sec" onclick="postpone(currentIdx,30)">⏰ Поем через 30 мин</button>
+    <button class="mbtn sec" onclick="postpone(currentIdx,60)">⏰ Поем через 1 час</button>
+    <button class="mbtn danger" onclick="skipMeal(currentIdx)">⏭ Пропустить</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ========== CONFIG ==========
+const PROFILE = {weight:55, targetWeight:75, kcalGoal:2700, protGoal:150, waterGoal:12};
+
+const BASE_MEALS = [
+  {id:0,time:'07:30',name:'Завтрак',items:['Каша на молоке 70г','Яйцо вкрутую 1–2шт','Мёд','Банан'],kcal:540,prot:24,badges:['железо']},
+  {id:1,time:'10:00',name:'Перекус 1',items:['Творог 5% — 130г','Мёд','Ягоды'],kcal:220,prot:18,badges:['белок']},
+  {id:2,time:'12:30',name:'Обед',items:['Рыба на пару 160г','Крупа 80г','Тушёные овощи'],kcal:580,prot:40,badges:['D3','железо']},
+  {id:3,time:'15:00',name:'Перекус 2',items:['Орехи 35г','Кефир 200мл'],kcal:310,prot:9,badges:[]},
+  {id:4,time:'17:30',name:'Ужин',items:['Морепродукты 200г','Крупа 70г','Овощи'],kcal:480,prot:32,badges:['железо']},
+  {id:5,time:'19:30',name:'Перекус 3',items:['Сыр 30г','Хлебец','Огурец'],kcal:200,prot:9,badges:[]},
+  {id:6,time:'20:30',name:'Последний приём',items:['Творог 5% — 130г','Мёд','Корица'],kcal:210,prot:17,badges:['казеин']},
+];
+
+// ========== STATE ==========
+let schedule, waterCount, currentWeight, rxSelected=[], currentIdx=-1, chatHistory=[];
+
+function loadState(){
+  const today = new Date().toDateString();
+  const lastDay = localStorage.getItem('day');
+  if(lastDay !== today){
+    schedule = BASE_MEALS.map(m=>({...m,status:'pending',actualTime:null,customMeal:null}));
+    waterCount = 0;
+    localStorage.setItem('day', today);
+    localStorage.setItem('waterCount','0');
+  } else {
+    schedule = JSON.parse(localStorage.getItem('schedule') || JSON.stringify(BASE_MEALS.map(m=>({...m,status:'pending',actualTime:null,customMeal:null}))));
+    waterCount = parseInt(localStorage.getItem('waterCount')||'0');
+  }
+  currentWeight = parseFloat(localStorage.getItem('weight') || PROFILE.weight);
+}
+function save(){
+  localStorage.setItem('schedule', JSON.stringify(schedule));
+  localStorage.setItem('waterCount', waterCount);
+}
+
+// ========== CLOCK ==========
+function startClock(){
+  const tick=()=>{
+    const n=new Date();
+    document.getElementById('clock').textContent=n.toLocaleTimeString('ru',{hour:'2-digit',minute:'2-digit'});
+    const days=['Вс','Пн','Вт','Ср','Чт','Пт','Сб'],months=['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'];
+    document.getElementById('dateStr').textContent=`${days[n.getDay()]}, ${n.getDate()} ${months[n.getMonth()]}`;
+  };
+  tick(); setInterval(tick,1000);
+  setInterval(()=>{renderNext();renderTimeline();}, 30000);
+}
+
+// ========== TIME UTILS ==========
+function toMins(t){const[h,m]=t.split(':').map(Number);return h*60+m;}
+function fromMins(m){return `${String(Math.floor(m/60)).padStart(2,'0')}:${String(m%60).padStart(2,'0')}`;}
+function nowMins(){const n=new Date();return n.getHours()*60+n.getMinutes();}
+function diffLabel(t){
+  const d=toMins(t)-nowMins();
+  if(d<=-1) return 'Прямо сейчас!';
+  if(d<60) return `через ${d} мин`;
+  return `через ${Math.floor(d/60)}ч ${d%60>0?d%60+'мин':''}`;
+}
+
+// ========== RENDER HOME ==========
+function renderHome(){
+  const done = schedule.filter(m=>m.status==='done');
+  const kcal = done.reduce((a,m)=>a+(m.customMeal?.kcal||m.kcal),0);
+  const prot = done.reduce((a,m)=>a+(m.customMeal?.prot||m.prot),0);
+  document.getElementById('kcalText').textContent=`${kcal} / ${PROFILE.kcalGoal} ккал`;
+  document.getElementById('kcalBar').style.width=Math.min(100,kcal/PROFILE.kcalGoal*100)+'%';
+  document.getElementById('mProtein').textContent=prot+'г';
+  document.getElementById('mMeals').textContent=`${done.length}/7`;
+  document.getElementById('mWater').textContent=waterCount;
+  renderNext();
+  renderTimeline();
+}
+
+function renderNext(){
+  const next = schedule.find(m=>m.status==='pending');
+  if(!next){
+    document.getElementById('nextName').textContent='Все приёмы выполнены 🎉';
+    document.getElementById('nextDesc').textContent='Отличный день!';
+    document.getElementById('nextTime').textContent='✅';
+    document.getElementById('nextCd').textContent='';
+    return;
+  }
+  document.getElementById('nextTime').textContent=next.time;
+  document.getElementById('nextCd').textContent=diffLabel(next.time);
+  document.getElementById('nextName').textContent=next.name;
+  document.getElementById('nextDesc').textContent=(next.customMeal?.items||next.items).slice(0,2).join(' · ')+'…';
+  currentIdx=schedule.indexOf(next);
+}
+
+function renderTimeline(){
+  const cur=nowMins();
+  const tl=document.getElementById('timeline');
+  tl.innerHTML='';
+  schedule.forEach((m,i)=>{
+    const mn=toMins(m.time);
+    const isNext=m.status==='pending'&&i===schedule.findIndex(x=>x.status==='pending');
+    const overdue=m.status==='pending'&&mn<cur;
+    const dc=m.status==='done'?'done':m.status==='skipped'?'skipped':isNext||overdue?'active-dot':'pending';
+    const cc=m.status==='done'?'done':m.status==='skipped'?'skipped':isNext||overdue?'active-card':'';
+    const dotTxt=m.status==='done'?'✓':m.status==='skipped'?'✕':'';
+    const items=m.customMeal?.items||m.items;
+    const kcal=m.customMeal?.kcal||m.kcal;
+    const prot=m.customMeal?.prot||m.prot;
+    const d=document.createElement('div');
+    d.className='tl-item';
+    d.onclick=()=>openModal(i);
+    d.innerHTML=`<div class="tl-dot ${dc}">${dotTxt}</div>
+    <div class="tl-card ${cc}">
+      <div class="tl-top"><div class="tl-time-lbl">${m.actualTime||m.time}${m.customMeal?` · ${m.customMeal.name}`:''}</div></div>
+      <div class="tl-name">${m.name}</div>
+      <div class="tl-desc">${items.slice(0,2).join(' · ')}${items.length>2?' …':''}</div>
+      <div class="tl-footer">
+        <span class="tl-kcal">🔥${kcal}ккал</span>
+        <span class="tl-prot">💪${prot}г</span>
+        ${m.status==='pending'?`<button class="done-btn" onclick="event.stopPropagation();markDone(${i})">Поел</button>`:''}
+      </div>
+    </div>`;
+    tl.appendChild(d);
+  });
+}
+
+// ========== MODAL ==========
+function openNextModal(){openModal(currentIdx);}
+function openModal(i){
+  if(i<0||i>=schedule.length)return;
+  currentIdx=i;
+  const m=schedule[i];
+  const items=m.customMeal?.items||m.items;
+  const kcal=m.customMeal?.kcal||m.kcal;
+  const prot=m.customMeal?.prot||m.prot;
+  document.getElementById('modalTitle').textContent=m.name+' · '+m.time;
+  document.getElementById('modalNut').innerHTML=`
+    <div class="nut-cell"><div class="nut-val" style="color:var(--amber)">${kcal}</div><div class="nut-lbl">ккал</div></div>
+    <div class="nut-cell"><div class="nut-val" style="color:var(--blue)">${prot}г</div><div class="nut-lbl">белок</div></div>
+    <div class="nut-cell"><div class="nut-val" style="color:var(--green)">${m.badges.length?m.badges[0]:'—'}</div><div class="nut-lbl">особое</div></div>`;
+  document.getElementById('modalItems').innerHTML=items.map(it=>`<div class="meal-detail-item">${it}</div>`).join('');
+  document.getElementById('mealOverlay').classList.add('open');
+}
+function closeOverlay(id){document.getElementById(id).classList.remove('open');}
+
+// ========== MEAL ACTIONS ==========
+function markDone(i){
+  if(i<0||i>=schedule.length)return;
+  const n=new Date();
+  const actual=n.toLocaleTimeString('ru',{hour:'2-digit',minute:'2-digit'});
+  const planned=toMins(schedule[i].time);
+  const actualMins=n.getHours()*60+n.getMinutes();
+  const delay=actualMins-planned;
+  schedule[i].status='done';
+  schedule[i].actualTime=actual;
+
+  if(delay>25){
+    let shifted=0;
+    for(let j=i+1;j<schedule.length;j++){
+      if(schedule[j].status==='pending'){
+        const newT=Math.min(toMins(schedule[j].time)+delay, 20*60+30);
+        schedule[j].time=fromMins(newT);
+        shifted++;
+      }
+    }
+    if(shifted>0){
+      document.getElementById('lateBanner').classList.add('show');
+      document.getElementById('lateText').textContent=`Сдвинула ${shifted} следующих приёмов на ~${Math.round(delay)} мин`;
+      toast(`Расписание сдвинуто на ${Math.round(delay)} мин 📅`,'warn');
+    }
+  } else {
+    toast(`${schedule[i].name} ✅ Молодец!`,'ok');
+  }
+  save(); closeOverlay('mealOverlay'); renderHome();
+}
+
+function postpone(i, mins){
+  if(i<0||i>=schedule.length)return;
+  const newT=toMins(schedule[i].time)+mins;
+  if(Math.floor(newT/60)>=21){toast('Нельзя позже 21:00 🌙','warn');return;}
+  schedule[i].time=fromMins(newT);
+  save(); closeOverlay('mealOverlay'); renderHome();
+  toast(`Перенесла на ${mins} минут ⏰`,'warn');
+}
+
+function skipMeal(i){
+  schedule[i].status='skipped';
+  save(); closeOverlay('mealOverlay'); renderHome();
+  toast('Пропущено. Постарайся не пропускать 🙏','warn');
+}
+
+// ========== WATER ==========
+function renderWater(){
+  const wrap=document.getElementById('glassesWrap');
+  wrap.innerHTML='';
+  for(let i=0;i<12;i++){
+    const g=document.createElement('div');
+    g.className='glass'+(i<waterCount?' filled':'');
+    g.onclick=()=>{if(i<waterCount){waterCount=i;localStorage.setItem('waterCount',waterCount);renderWater();updateWaterNum();}};
+    g.innerHTML='<div class="gfill"></div>';
+    wrap.appendChild(g);
+  }
+  updateWaterNum();
+  renderWaterChart();
+}
+function updateWaterNum(){
+  document.getElementById('wCount').textContent=waterCount;
+  document.getElementById('mWater').textContent=waterCount;
+}
+function addWater(n){
+  waterCount=Math.min(12,waterCount+n);
+  localStorage.setItem('waterCount',waterCount);
+  renderWater();
+  toast(`💧 Выпил ${n} стак. Итого: ${waterCount}/12`,'info');
+}
+function renderWaterChart(){
+  const wrap=document.getElementById('waterChart');
+  wrap.innerHTML='';
+  const days=['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
+  const data=[8,10,9,7,0,0,0];
+  const max=12;
+  days.forEach((d,i)=>{
+    const h=data[i]?Math.round(data[i]/max*60)+5:3;
+    const w=document.createElement('div');
+    w.className='bwrap';
+    w.innerHTML=`<div class="bar" style="height:${h}px;background:${data[i]?'var(--blue)':'var(--surface2)'}"></div><div class="blbl">${d}</div>`;
+    wrap.appendChild(w);
+  });
+}
+
+// ========== WEIGHT ==========
+function saveWeight(){
+  const v=parseFloat(document.getElementById('wInput').value);
+  if(!v||v<40||v>200){toast('Введи корректный вес','warn');return;}
+  currentWeight=v;
+  localStorage.setItem('weight',v);
+  const prog=Math.max(0,Math.round((v-PROFILE.weight)/(PROFILE.targetWeight-PROFILE.weight)*100));
+  document.getElementById('wProgress').textContent=prog+'%';
+  document.getElementById('wNow').textContent=v+'кг';
+  toast(`Вес ${v}кг сохранён! Прогресс: ${prog}% 💪`,'ok');
+}
+
+// ========== ENERGY ==========
+function setEnergy(n){
+  for(let i=1;i<=5;i++) document.getElementById('e'+i).classList.remove('sel');
+  document.getElementById('e'+n).classList.add('sel');
+  localStorage.setItem('energy',n);
+  const msgs=['','😴 Мало сил — выпей воды и не пропускай еду!','😐 Нормально. Поел все приёмы?','🙂 Неплохо!','😊 Хорошо!','🚀 Огонь!'];
+  toast(msgs[n],'ok');
+}
+
+// ========== REFLUX ==========
+function toggleRx(btn,name){
+  btn.classList.toggle('sel');
+  rxSelected=rxSelected.includes(name)?rxSelected.filter(n=>n!==name):[...rxSelected,name];
+}
+function saveRx(){
+  if(!rxSelected.length){toast('Выбери симптомы','warn');return;}
+  let log=JSON.parse(localStorage.getItem('rxLog')||'[]');
+  log.unshift({date:new Date().toLocaleDateString('ru'),time:new Date().toLocaleTimeString('ru',{hour:'2-digit',minute:'2-digit'}),symptoms:rxSelected});
+  if(log.length>30)log=log.slice(0,30);
+  localStorage.setItem('rxLog',JSON.stringify(log));
+  toast('Симптомы записаны 📝','ok');
+  rxSelected=[];
+  document.querySelectorAll('.rx-btn').forEach(b=>b.classList.remove('sel'));
+}
+
+// ========== CHARTS ==========
+function renderKcalChart(){
+  const wrap=document.getElementById('kcalChart');
+  wrap.innerHTML='';
+  const days=['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
+  const data=[2680,2720,2650,0,0,0,0];
+  const max=2800;
+  days.forEach((d,i)=>{
+    const h=data[i]?Math.round(data[i]/max*60)+5:3;
+    const w=document.createElement('div');
+    w.className='bwrap';
+    w.innerHTML=`<div class="bar" style="height:${h}px;background:${data[i]?'var(--teal)':'var(--surface2)'}"></div><div class="blbl">${d}</div>`;
+    wrap.appendChild(w);
+  });
+}
+
+// ========== SETTINGS ==========
+const REMINDERS=[
+  {icon:'🍽️',name:'Напоминания о еде',desc:'За 10 мин до приёма',key:'remFood'},
+  {icon:'💧',name:'Напоминания о воде',desc:'Каждые 1.5 часа',key:'remWater'},
+  {icon:'💊',name:'Добавки (D3, железо)',desc:'Утром с завтраком',key:'remSupp'},
+  {icon:'🚶',name:'Не ложись после еды',desc:'Через 30 мин после ужина',key:'remLie'},
+  {icon:'⚖️',name:'Взвешивание',desc:'По воскресеньям',key:'remWeight'},
+];
+
+function toggleReminder(key){
+  const isOn=localStorage.getItem(key)==='1';
+  localStorage.setItem(key,isOn?'0':'1');
+  renderSettings();
+  toast(isOn?'Выключено':'Включено ✅',isOn?'warn':'ok');
+}
+
+function renderSettings(){
+  // set defaults on first run
+  REMINDERS.forEach(r=>{
+    if(localStorage.getItem(r.key)===null)
+      localStorage.setItem(r.key,r.key==='remWeight'?'0':'1');
+  });
+  document.getElementById('reminderSettings').innerHTML=REMINDERS.map(r=>{
+    const on=localStorage.getItem(r.key)==='1';
+    return '<div style="padding:12px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;cursor:pointer;" onclick="toggleReminder(\'' + r.key + '\')">'
+      +'<span style="font-size:18px;">'+r.icon+'</span>'
+      +'<div style="flex:1;"><div style="font-size:13px;font-weight:700;">'+r.name+'</div>'
+      +'<div style="font-size:11px;color:var(--muted);">'+r.desc+'</div></div>'
+      +'<div style="width:44px;height:26px;border-radius:13px;background:'+(on?'var(--green)':'var(--surface2)')+';border:2px solid '+(on?'var(--green)':'var(--border)')+';position:relative;transition:all 0.3s;flex-shrink:0;">'
+      +'<div style="position:absolute;top:2px;left:'+(on?'18px':'2px')+';width:18px;height:18px;border-radius:50%;background:white;transition:left 0.25s;box-shadow:0 1px 3px rgba(0,0,0,0.3);"></div></div>'
+      +'</div>';
+  }).join('');
+
+  document.getElementById('schedList').innerHTML=schedule.map((m,i)=>`
+    <div style="padding:10px 14px;border-bottom:${i<schedule.length-1?'1px solid var(--border)':'none'};display:flex;justify-content:space-between;align-items:center;font-size:13px;">
+      <span style="color:var(--muted);">${m.name}</span>
+      <span style="font-weight:800;color:${m.status==='done'?'var(--green)':m.status==='skipped'?'var(--red)':'var(--amber)'};">${m.time}</span>
+    </div>`).join('');
+}
+
+function resetDay(){
+  if(confirm('Сбросить расписание на сегодня?')){
+    schedule=BASE_MEALS.map(m=>({...m,status:'pending',actualTime:null,customMeal:null}));
+    save(); renderHome(); renderSettings(); toast('Расписание сброшено 🔄','ok');
+  }
+}
+
+// ========== CHAT ==========
+const QUICK_MESSAGES=[
+  '🍽️ Только поел',
+  '⏰ Пообедаю в 15:30',
+  '🔴 Пропустил перекус',
+  '💧 Выпил воды',
+  '😴 Нет аппетита',
+  '🤔 Что поесть сейчас?',
+  '📅 Завтра работаю',
+  '⚡ Чувствую слабость',
+];
+
+function renderQuickActions(){
+  // Dynamic context buttons based on next meal
+  const next = schedule.find(m=>m.status==='pending');
+  const contextBtns = next ? [
+    `🔄 Замена для "${next.name}"`,
+    `📦 Что есть дома?`,
+  ] : [];
+  const all = [...contextBtns, ...QUICK_MESSAGES];
+  document.getElementById('quickActions').innerHTML=all.map(q=>`<button class="qa" onclick="quickSend('${q}')">${q}</button>`).join('');
+}
+
+function quickSend(msg){
+  // Special: ask for fridge contents before suggesting
+  if(msg.startsWith('🔄 Замена') || msg.startsWith('📦 Что есть дома')){
+    const next = schedule.find(m=>m.status==='pending');
+    const mealName = next ? next.name : 'следующий приём';
+    addMsg('ai', `Хорошо, подберу замену для "${mealName}" 🧊 Напиши что сейчас есть дома — например "есть яйца, творог, гречка, тунец консервы". Подберу лучший вариант под твою грыжу!`);
+    document.getElementById('chatInput').focus();
+    return;
+  }
+  document.getElementById('chatInput').value=msg;
+  sendMessage();
+}
+
+function handleKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage();}}
+function autoResize(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,100)+'px';}
+
+function addMsg(role,text){
+  const wrap=document.getElementById('chatMessages');
+  const n=new Date().toLocaleTimeString('ru',{hour:'2-digit',minute:'2-digit'});
+  const div=document.createElement('div');
+  div.className=`msg ${role}`;
+  div.innerHTML=role==='ai'
+    ?`<div class="msg-avatar">🤱</div><div><div class="msg-bubble">${text}</div><div class="msg-time">${n}</div></div>`
+    :`<div class="msg-avatar user-av">👤</div><div style="text-align:right;"><div class="msg-bubble">${text}</div><div class="msg-time">${n}</div></div>`;
+  wrap.appendChild(div);
+  setTimeout(()=>wrap.scrollTop=wrap.scrollHeight,50);
+  return div;
+}
+
+function addTyping(){
+  const wrap=document.getElementById('chatMessages');
+  const div=document.createElement('div');
+  div.className='msg ai';
+  div.id='typing';
+  div.innerHTML=`<div class="msg-avatar">🤱</div><div><div class="msg-bubble" style="color:var(--muted);">печатает…</div></div>`;
+  wrap.appendChild(div);
+  wrap.scrollTop=wrap.scrollHeight;
+}
+
+// ========== FOOD DATABASE (offline) ==========
+const FOODS = [
+  // хлеб/выпечка
+  {words:['лепинь','хлеб','тост','хлебец','батон','булк'],kcalPer100:260,protPer100:8},
+  // рыба
+  {words:['лосось','сёмга'],kcalPer100:208,protPer100:20},
+  {words:['скумбрия'],kcalPer100:191,protPer100:18},
+  {words:['тунец'],kcalPer100:130,protPer100:28},
+  {words:['сардин'],kcalPer100:140,protPer100:19},
+  {words:['форель'],kcalPer100:148,protPer100:20},
+  {words:['треска'],kcalPer100:78,protPer100:18},
+  // морепродукты
+  {words:['мидии','мидий'],kcalPer100:86,protPer100:12},
+  {words:['креветк'],kcalPer100:95,protPer100:18},
+  {words:['кальмар'],kcalPer100:92,protPer100:18},
+  // молочка
+  {words:['творог'],kcalPer100:168,protPer100:18},
+  {words:['сыр','гауда','пармезан','рикотта'],kcalPer100:350,protPer100:25},
+  {words:['йогурт'],kcalPer100:66,protPer100:5},
+  {words:['кефир'],kcalPer100:51,protPer100:3},
+  {words:['молок'],kcalPer100:64,protPer100:3},
+  {words:['сметан'],kcalPer100:210,protPer100:3},
+  // яйца
+  {words:['яйц','яйко','омлет'],kcalPer100:157,protPer100:13},
+  // крупы
+  {words:['гречк'],kcalPer100:343,protPer100:13},
+  {words:['овсянк','овёс','каш'],kcalPer100:370,protPer100:11},
+  {words:['рис','пшён','пшено'],kcalPer100:340,protPer100:7},
+  {words:['паст','макарон','спагетт'],kcalPer100:350,protPer100:11},
+  {words:['чечевиц','фасоль'],kcalPer100:310,protPer100:24},
+  // овощи
+  {words:['рукол','шпинат','салат','зелень'],kcalPer100:20,protPer100:2},
+  {words:['огурец','огурц','помидор','томат'],kcalPer100:15,protPer100:1},
+  {words:['брокколи','цукини','кабачк'],kcalPer100:30,protPer100:3},
+  {words:['картофел','картошк'],kcalPer100:77,protPer100:2},
+  // орехи/масло
+  {words:['орех','миндаль','кешью'],kcalPer100:620,protPer100:20},
+  {words:['масло олив','масло слив','масло'],kcalPer100:900,protPer100:0},
+  {words:['авокадо'],kcalPer100:160,protPer100:2},
+  // мясо/колбаса (пескетарианец, но на всякий случай)
+  {words:['сосиск','колбас'],kcalPer100:230,protPer100:12},
+  // фрукты
+  {words:['банан'],kcalPer100:89,protPer100:1},
+  {words:['яблок','груш'],kcalPer100:52,protPer100:0},
+  {words:['ягод','черник','малин'],kcalPer100:45,protPer100:1},
+  // прочее
+  {words:['мёд','мед'],kcalPer100:304,protPer100:0},
+  {words:['арахисов'],kcalPer100:590,protPer100:25},
+];
+
+// Portion keywords → grams multiplier
+const PORTIONS = [
+  {words:['200г','200 г'],g:200},{words:['150г','150 г'],g:150},
+  {words:['100г','100 г'],g:100},{words:['80г','80 г'],g:80},
+  {words:['кусок','кусочек','порция'],g:150},{words:['тарелк'],g:250},
+  {words:['горсть'],g:30},{words:['ложк'],g:15},
+  {words:['стакан'],g:200},{words:['банка','банку'],g:185},
+];
+
+function estimateMeal(text){
+  const t=text.toLowerCase();
+  let totalKcal=0, totalProt=0, found=[];
+
+  FOODS.forEach(food=>{
+    if(food.words.some(w=>t.includes(w))){
+      let g=130; // default portion
+      PORTIONS.forEach(p=>{ if(p.words.some(w=>t.includes(w))) g=p.g; });
+      // small items like spices/greens default smaller
+      if(food.kcalPer100<30) g=50;
+      if(food.words.some(w=>['масло','мёд','мед'].includes(w))) g=10;
+      totalKcal+=Math.round(food.kcalPer100*g/100);
+      totalProt+=Math.round(food.protPer100*g/100);
+      found.push(food.words[0]);
+    }
+  });
+
+  return {kcal:totalKcal||400, prot:totalProt||15, found};
+}
+
+// Parse time mentions: "в 15:30", "через час", "через 30 минут", "в 3", "около 4"
+function parseTimeMention(text){
+  const t=text.toLowerCase();
+  // "в HH:MM"
+  let m=t.match(/в\s+(\d{1,2}):(\d{2})/);
+  if(m) return {type:'absolute', h:parseInt(m[1]), min:parseInt(m[2])};
+  // "в X часов / около X"
+  m=t.match(/(?:в|около|примерно)\s+(\d{1,2})(?:\s*(?:час|ч))?/);
+  if(m){ const h=parseInt(m[1]); return {type:'absolute', h:h<8?h+12:h, min:0}; }
+  // "через X минут"
+  m=t.match(/через\s+(\d+)\s*мин/);
+  if(m) return {type:'relative', mins:parseInt(m[1])};
+  // "через час / полчаса"
+  if(t.includes('через час')||t.includes('через 1 час')) return {type:'relative',mins:60};
+  if(t.includes('полчаса')||t.includes('пол часа')) return {type:'relative',mins:30};
+  // "завтра"
+  if(t.includes('завтра')) return {type:'tomorrow'};
+  return null;
+}
+
+function shiftScheduleFrom(fromIdx, delayMins){
+  let shifted=0;
+  for(let j=fromIdx;j<schedule.length;j++){
+    if(schedule[j].status==='pending'){
+      const newT=Math.min(toMins(schedule[j].time)+delayMins, 20*60+30);
+      schedule[j].time=fromMins(newT);
+      shifted++;
+    }
+  }
+  return shifted;
+}
+
+function nextPendingIdx(){
+  return schedule.findIndex(m=>m.status==='pending');
+}
+
+// ========== INTENT DETECTION ==========
+function detectIntent(text){
+  const t=text.toLowerCase();
+  // Ate something
+  if(/(съел|поел|покушал|завтракал|обедал|ужинал|перекусил|ем сейчас|только поел|кушаю|завтрак|это мой завтрак|это обед|это ужин)/.test(t))
+    return 'ATE';
+  // Will eat at time
+  if(/(пообедаю|поужинаю|позавтракаю|поем|буду есть|планирую|собираюсь|примерно в|около|через|позже)/.test(t))
+    return 'WILL_EAT';
+  // Water
+  if(/(выпил воды|выпил стакан|вода|пью воду)/.test(t))
+    return 'WATER';
+  // Fridge / what I have
+  if(/(у меня есть|дома есть|в холодильнике|имею|есть яйц|есть творог|есть тунец|есть рыб|есть гречк|есть рис|нашёл|нашел)/.test(t))
+    return 'FRIDGE';
+  // Skipped
+  if(/(пропустил|не поел|нет времени|некогда есть)/.test(t))
+    return 'SKIPPED';
+  // Symptoms
+  if(/(изжог|рефлюкс|кислый|тяжесть|запах|ком в горле|болит желудок|тошнот)/.test(t))
+    return 'SYMPTOM';
+  // Weakness / no appetite
+  if(/(слабость|нет сил|нет аппетита|плохо|устал|не хочу есть)/.test(t))
+    return 'WEAK';
+  // What to eat
+  if(/(что поесть|что съесть|посоветуй|что приготовить|что можно|предложи)/.test(t))
+    return 'SUGGEST';
+  // Tomorrow / work schedule
+  if(/(завтра работаю|завтра|рабочий день|не смогу|поздно вернусь)/.test(t))
+    return 'TOMORROW';
+  // Greeting / how are you
+  if(/(привет|здравствуй|как дела|доброе|добрый|хорошо|норм|отлично)/.test(t))
+    return 'GREET';
+  return 'UNKNOWN';
+}
+
+// ========== SMART MAMA RESPONSES ==========
+function mamaReply(text){
+  const intent = detectIntent(text);
+  const t = text.toLowerCase();
+  const now = new Date();
+  const nowM = nowMins();
+  const pendingIdx = nextPendingIdx();
+  const done = schedule.filter(m=>m.status==='done').length;
+
+  if(intent==='ATE'){
+    const {kcal, prot, found} = estimateMeal(text);
+    // Find which meal slot this belongs to (current time)
+    let mealIdx = pendingIdx >= 0 ? pendingIdx : done > 0 ? done-1 : 0;
+    // If user says "завтрак" explicitly → slot 0, "обед" → 2, "ужин" → 4
+    if(/завтрак/.test(t)) mealIdx=0;
+    else if(/обед/.test(t)) mealIdx=2;
+    else if(/ужин/.test(t)) mealIdx=4;
+    else if(/перекус/.test(t) && pendingIdx>=0) mealIdx=pendingIdx;
+
+    if(mealIdx<schedule.length && schedule[mealIdx].status!=='done'){
+      const actualTime = now.toLocaleTimeString('ru',{hour:'2-digit',minute:'2-digit'});
+      schedule[mealIdx].status='done';
+      schedule[mealIdx].actualTime=actualTime;
+      schedule[mealIdx].customMeal={name:text.slice(0,40),items:[text.slice(0,60)],kcal,prot};
+
+      // Shift subsequent if late
+      const planned = toMins(BASE_MEALS[mealIdx].time);
+      const delay = nowM - planned;
+      let shiftMsg='';
+      if(delay>25){
+        const shifted = shiftScheduleFrom(mealIdx+1, delay);
+        if(shifted>0){
+          document.getElementById('lateBanner').classList.add('show');
+          document.getElementById('lateText').textContent=`Сдвинула ${shifted} приёмов на ~${Math.round(delay)} мин`;
+          shiftMsg=` Сдвинула следующие приёмы на ~${Math.round(delay)} мин — всё под контролем 📅`;
+        }
+      }
+      save(); renderHome();
+
+      const totalKcal = schedule.filter(m=>m.status==='done').reduce((a,m)=>a+(m.customMeal?.kcal||m.kcal),0);
+      const remaining = PROFILE.kcalGoal - totalKcal;
+      const nextM = schedule.find(m=>m.status==='pending');
+      const nextHint = nextM ? ` Следующий приём — ${nextM.name} в ${nextM.time}.` : ' Все приёмы сегодня выполнены 🎉';
+
+      return `Записала! 💚 Оценила: ~${kcal} ккал, ~${prot}г белка.${shiftMsg} Осталось набрать ~${remaining} ккал за день.${nextHint}`;
+    } else {
+      return `Молодец что поел! 💚 Оценила: ~${kcal} ккал, ~${prot}г белка. Продолжаем в том же духе — ${done}/7 приёмов сделано.`;
+    }
+  }
+
+  if(intent==='WILL_EAT'){
+    const timeMention = parseTimeMention(text);
+    if(timeMention?.type==='tomorrow'){
+      return `Понятно, завтра рабочий день 📅 Скажи примерно во сколько будет каждый приём — я перестрою расписание с утра. Или утром напиши "завтрак в 8" — подстроюсь.`;
+    }
+    if(timeMention?.type==='absolute'){
+      const targetMins = timeMention.h*60+timeMention.min;
+      if(pendingIdx>=0){
+        const currentPlanned = toMins(schedule[pendingIdx].time);
+        const delay = targetMins - currentPlanned;
+        if(Math.abs(delay)>5){
+          shiftScheduleFrom(pendingIdx, delay);
+          save(); renderHome();
+          document.getElementById('lateBanner').classList.add('show');
+          document.getElementById('lateText').textContent=`Перестроила расписание под ${timeMention.h}:${String(timeMention.min).padStart(2,'0')}`;
+          return `Хорошо, перестроила расписание 🗓 ${schedule[pendingIdx].name} теперь в ${schedule[pendingIdx].time}. Напомню за 10 минут!`;
+        }
+      }
+      return `Отлично, жду тебя в ${timeMention.h}:${String(timeMention.min).padStart(2,'0')} 🕐 Напомню!`;
+    }
+    if(timeMention?.type==='relative'){
+      if(pendingIdx>=0){
+        shiftScheduleFrom(pendingIdx, timeMention.mins);
+        save(); renderHome();
+        return `Договорились — сдвинула на ${timeMention.mins} минут ⏰ Следующий приём теперь в ${schedule[pendingIdx].time}.`;
+      }
+    }
+    return `Хорошо, скажи точнее — во сколько? Например "пообедаю в 15:30" — подстрою всё расписание 📅`;
+  }
+
+  if(intent==='WATER'){
+    waterCount=Math.min(12,waterCount+1);
+    localStorage.setItem('waterCount',waterCount);
+    renderHome();
+    if(waterCount<6) return `Записала 💧 Но маловато — выпил только ${waterCount} из 12 стаканов. Пей чаще, особенно при склеродермии!`;
+    if(waterCount<10) return `Отлично 💧 ${waterCount}/12 стаканов. Ещё ${12-waterCount} — и норма выполнена!`;
+    return `Супер! 💧 ${waterCount}/12 — почти норма. Молодец!`;
+  }
+
+  if(intent==='SKIPPED'){
+    if(pendingIdx>=0){
+      schedule[pendingIdx-1>=0?pendingIdx-1:0].status='skipped';
+      save(); renderHome();
+    }
+    return `Понимаю, бывает 🙏 Но старайся не пропускать — при низком ферритине пропуски бьют по энергии. Следующий приём в ${pendingIdx>=0?schedule[pendingIdx].time:'—'}, не пропусти!`;
+  }
+
+  if(intent==='SYMPTOM'){
+    if(/кислый|рефлюкс|изжог/.test(t))
+      return `Кислый вкус — скорее всего рефлюкс от грыжи 🫁 Не ложись ещё минимум 2 часа. В следующий раз ешь медленнее и порцию поменьше. Если часто — стоит сказать гастроэнтерологу.`;
+    if(/тяжесть/.test(t))
+      return `Тяжесть после еды — скорее всего съел чуть больше нормы или быстро 🫁 Встань, походи 15 минут — это поможет. Помни: кольцо Шацкого любит маленькие порции.`;
+    if(/запах/.test(t))
+      return `Запах после еды — это рефлюкс, часть желудочного сока поднимается выше 🫁 Выпей немного воды, не ложись. Острое и жирное усиливают симптом — следи за этим.`;
+    return `Записала симптом 📝 Если повторяется часто — обязательно скажи гастроэнтерологу. Пока держи: не ложиться после еды, маленькие порции, без острого.`;
+  }
+
+  if(intent==='WEAK'){
+    const totalKcal = schedule.filter(m=>m.status==='done').reduce((a,m)=>a+(m.customMeal?.kcal||m.kcal),0);
+    if(totalKcal<800 && done<3)
+      return `Слабость понятна — ты ещё мало поел сегодня! Всего ${totalKcal} ккал из 2700. Это при низком ферритине прямо бьёт по энергии. Поешь как можно скорее — даже небольшой перекус поможет 💚`;
+    if(waterCount<5)
+      return `Слабость может быть от обезвоживания — выпил только ${waterCount} стаканов. Выпей сейчас стакан воды, это поможет уже через 10 минут 💧`;
+    return `Слабость бывает при низком ферритине — это твоя ситуация 🔴 Убедись что принял железо и D3 сегодня. Поешь что-то с железом: мидии, тунец, шпинат. Продолжай режим питания — со временем станет лучше 💚`;
+  }
+
+  if(intent==='SUGGEST' || intent==='FRIDGE'){
+    // Check if user listed fridge contents
+    const hasFridgeList = /есть |имею |стоит |лежит |(яйц|творог|рыб|тунец|лосос|гречк|рис|овсянк|молок|сыр|кефир|креветк|мидии)/.test(t);
+
+    if(hasFridgeList){
+      // Parse what they have and suggest meal
+      const {found} = estimateMeal(text);
+      const hour = now.getHours();
+      const next = schedule.find(m=>m.status==='pending');
+      const mealType = next?.name || (hour<12?'завтрак':hour<16?'обед':hour<19?'ужин':'перекус');
+
+      // Build suggestion based on available ingredients
+      let suggestion = '';
+      if(found.includes('тунец') && (found.includes('гречк')||found.includes('рис')||found.includes('яйц')))
+        suggestion = `Тунец с гречкой и яйцом 🐟 Тунец 1 банка + гречка 80г + 1 яйцо вкрутую — ~480 ккал, 40г белка. Простой, быстрый, отличное железо!`;
+      else if(found.includes('яйц') && found.includes('творог'))
+        suggestion = `Паровой омлет с творогом 🥚 3 яйца + 50г творога + молоко — ~380 ккал, 32г белка. Мягко для желудка, без лишнего жира.`;
+      else if(found.includes('творог') && found.includes('молок'))
+        suggestion = `Творожная каша на молоке 🥛 Любая крупа 70г на молоке + творог 130г сверху + мёд — ~520 ккал, 28г белка. Отлично для желудка!`;
+      else if(found.includes('креветк') || found.includes('мидии') || found.includes('кальмар'))
+        suggestion = `Морепродукты тушёные с крупой 🦐 200г морепродуктов + крупа 70г + чеснок + лимон — ~460 ккал, 34г белка. Рекорд по железу!`;
+      else if(found.includes('лосос') || found.includes('скумбри') || found.includes('форел'))
+        suggestion = `Рыба на пару с крупой 🐟 160г рыбы + гречка/рис 80г + лимон — ~560 ккал, 40г белка. Максимум D3!`;
+      else if(found.includes('яйц'))
+        suggestion = `Яйца всмятку с хлебом 🥚 2-3 яйца + цельнозерновой хлеб 2 куска + огурец — ~380 ккал, 20г белка. Быстро и хорошо для желудка!`;
+      else if(found.includes('сыр') || found.includes('творог'))
+        suggestion = `Творог с орехами и мёдом 🧀 Творог 130г + орехи 30г + мёд — ~320 ккал, 20г белка. Отлично как перекус!`;
+      else
+        suggestion = `Напиши подробнее что именно есть — например "есть яйца, творог, тунец" — подберу точнее! 🧊`;
+
+      return `Отлично, работаем с тем что есть! 💚 На ${mealType}: ${suggestion} Без острых специй, жуй медленно — помним про грыжу.`;
+    }
+
+    // No fridge list — ask for it or give time-based suggestion
+    const hour = now.getHours();
+    if(hour<10) return `На завтрак: каша на молоке + 2 яйца + мёд 🌅 ~550 ккал, 26г белка. Или напиши "у меня есть..." — подберу из того что дома!`;
+    if(hour<13) return `Перекус: творог 5% 130г с мёдом + ягоды 🫐 ~220 ккал, 18г белка. Нет творога? Напиши что есть дома — найдём вариант!`;
+    if(hour<16) return `На обед лучше рыба или морепродукты + крупа 🐟 Напиши что есть в холодильнике — подберу конкретный вариант!`;
+    if(hour<18) return `Перекус: орехи 35г + кефир 🥛 ~310 ккал. Нет орехов? Напиши что есть — придумаем что-то!`;
+    if(hour<19) return `На ужин лучше морепродукты или рыба + крупа 🦪 Напиши что есть дома — не рыба, так найдём замену!`;
+    return `Поздновато — творог 5% 130г с мёдом 🌙 ~210 ккал, казеин для мышц. Последний приём строго до 20:30!`;
+  }
+
+  if(intent==='TOMORROW'){
+    return `Понятно, завтра работаешь! 💼 Утром напиши во сколько встал и позавтракал — я перестрою расписание под твой рабочий день. Главное: ужин до 20:30 даже в рабочий день 🌙`;
+  }
+
+  if(intent==='GREET'){
+    const hour = now.getHours();
+    const gr = hour<10?'Доброе утро':hour<14?'Привет':hour<18?'Добрый день':'Добрый вечер';
+    const nextM = schedule.find(m=>m.status==='pending');
+    return `${gr}! 🌿 Сделано ${done}/7 приёмов, ${waterCount}/12 стаканов воды.${nextM?` Следующий — ${nextM.name} в ${nextM.time}.`:' Все приёмы выполнены!'} Как самочувствие?`;
+  }
+
+  // UNKNOWN — generic helpful response
+  const nextM = schedule.find(m=>m.status==='pending');
+  return `Поняла тебя! 💚 ${nextM?`Следующий приём — ${nextM.name} в ${nextM.time}.`:''} Напиши что поел, во сколько планируешь есть, или спроси что приготовить — я подстроюсь под тебя.`;
+}
+
+function sendMessage(){
+  const input=document.getElementById('chatInput');
+  const text=input.value.trim();
+  if(!text) return;
+  input.value=''; input.style.height='auto';
+
+  addMsg('user',text);
+
+  const btn=document.getElementById('sendBtn');
+  btn.disabled=true;
+  addTyping();
+
+  // Simulate thinking delay for natural feel
+  setTimeout(()=>{
+    document.getElementById('typing')?.remove();
+    const reply = mamaReply(text);
+    addMsg('ai', reply);
+    btn.disabled=false;
+  }, 600 + Math.random()*400);
+}
+
+// ========== PAGE SWITCH ==========
+function switchPage(name,btn){
+  document.querySelectorAll('.page,.chat-page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nb').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  btn.classList.add('active');
+  if(name!=='chat') document.getElementById('mainScroll').scrollTop=0;
+  if(name==='settings') renderSettings();
+  if(name==='water'){renderWater();renderKcalChart();}
+}
+
+// ========== TOAST ==========
+let tTimer;
+function toast(msg,type='ok'){
+  const t=document.getElementById('toast');
+  t.textContent=msg;
+  t.className=`toast show ${type}`;
+  clearTimeout(tTimer);
+  tTimer=setTimeout(()=>t.classList.remove('show'),2800);
+}
+
+// ========== INIT ==========
+window.onload=()=>{
+  loadState();
+  startClock();
+  renderHome();
+  renderWater();
+  renderKcalChart();
+  renderSettings();
+  renderQuickActions();
+
+  // Welcome chat message
+  const hour=new Date().getHours();
+  const greeting=hour<10?'Доброе утро':hour<14?'Привет':hour<18?'Добрый день':'Добрый вечер';
+  const done=schedule.filter(m=>m.status==='done').length;
+  addMsg('ai',`${greeting}! 🌿 Напиши мне что поел или когда планируешь поесть — я подстрою расписание. Пока сделано ${done}/7 приёмов. Как себя чувствуешь?`);
+};
+</script>
+</body>
+</html>
