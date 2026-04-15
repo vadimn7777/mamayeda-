@@ -464,14 +464,36 @@ let schedule, waterCount, currentWeight, rxSelected=[], currentIdx=-1, chatHisto
 function loadState(){
   const today = new Date().toDateString();
   const lastDay = localStorage.getItem('day');
-  if(lastDay !== today){
+  try {
+    if(lastDay !== today){
+      schedule = BASE_MEALS.map(m=>({...m,status:'pending',actualTime:null,customMeal:null}));
+      waterCount = 0;
+      localStorage.setItem('day', today);
+      localStorage.setItem('waterCount','0');
+      localStorage.setItem('schedule', JSON.stringify(schedule));
+    } else {
+      const saved = localStorage.getItem('schedule');
+      if(saved){
+        const parsed = JSON.parse(saved);
+        // Validate — must have 7 items with required fields
+        if(Array.isArray(parsed) && parsed.length===7 && parsed[0].time){
+          schedule = parsed;
+        } else {
+          throw new Error('bad data');
+        }
+      } else {
+        schedule = BASE_MEALS.map(m=>({...m,status:'pending',actualTime:null,customMeal:null}));
+        localStorage.setItem('schedule', JSON.stringify(schedule));
+      }
+      waterCount = parseInt(localStorage.getItem('waterCount')||'0');
+    }
+  } catch(e) {
+    // Reset everything on any error
     schedule = BASE_MEALS.map(m=>({...m,status:'pending',actualTime:null,customMeal:null}));
     waterCount = 0;
     localStorage.setItem('day', today);
     localStorage.setItem('waterCount','0');
-  } else {
-    schedule = JSON.parse(localStorage.getItem('schedule') || JSON.stringify(BASE_MEALS.map(m=>({...m,status:'pending',actualTime:null,customMeal:null}))));
-    waterCount = parseInt(localStorage.getItem('waterCount')||'0');
+    localStorage.setItem('schedule', JSON.stringify(schedule));
   }
   currentWeight = parseFloat(localStorage.getItem('weight') || PROFILE.weight);
 }
@@ -505,6 +527,7 @@ function diffLabel(t){
 
 // ========== RENDER HOME ==========
 function renderHome(){
+  if(!schedule||!schedule.length) return;
   const done = schedule.filter(m=>m.status==='done');
   const kcal = done.reduce((a,m)=>a+(m.customMeal?.kcal||m.kcal),0);
   const prot = done.reduce((a,m)=>a+(m.customMeal?.prot||m.prot),0);
