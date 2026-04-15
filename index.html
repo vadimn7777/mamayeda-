@@ -933,7 +933,197 @@ function resetShop() {
   renderShopList(); toast('Список сброшен', 'ok');
 }
 
-var QMSGS = ['Только поел','Пообедаю в 15:30','Пропустил перекус','Выпил воды','Нет аппетита','Что поесть сейчас?','Чувствую слабость'];
+// ===== FOOD DATABASE (ккал/100г, белок/100г) =====
+var FDB = [
+  // Рыба и морепродукты
+  {k:['лосос','salmon','форел','trout'],n:'лосось',kc:208,pr:20,def:150},
+  {k:['треск','kabeljau','cod'],n:'треска',kc:82,pr:18,def:180},
+  {k:['скумбр','makrele'],n:'скумбрия',kc:262,pr:18,def:160},
+  {k:['тунец','thunfisch','tuna'],n:'тунец',kc:116,pr:26,def:150},
+  {k:['сардин'],n:'сардины',kc:208,pr:19,def:120},
+  {k:['мидии','musseln'],n:'мидии',kc:86,pr:12,def:200},
+  {k:['креветк','shrimp','garnelen'],n:'креветки',kc:97,pr:20,def:180},
+  {k:['рыбн палочк','fischstaebchen','рыбные палочки','fish stick'],n:'рыбные палочки',kc:220,pr:12,def:200},
+  {k:['кальмар','squid'],n:'кальмар',kc:92,pr:18,def:150},
+  {k:['осьминог'],n:'осьминог',kc:82,pr:15,def:150},
+  {k:['анчоус'],n:'анчоусы',kc:131,pr:20,def:50},
+  {k:['палтус'],n:'палтус',kc:103,pr:19,def:160},
+  {k:['окунь'],n:'окунь',kc:82,pr:18,def:150},
+  // Молочные
+  {k:['яйц','egg','ei'],n:'яйцо',kc:155,pr:13,def:60,unit:'шт',unitW:60},
+  {k:['творог','topfen','quark'],n:'творог',kc:101,pr:17,def:130},
+  {k:['молок','milch','milk'],n:'молоко',kc:60,pr:3,def:200},
+  {k:['кефир','buttermilch'],n:'кефир',kc:51,pr:3,def:200},
+  {k:['йогурт','joghurt','yogurt'],n:'йогурт',kc:66,pr:5,def:150},
+  {k:['сыр','kase','cheese','гауда','пармезан','моцарелл','brie','camembert','edamer'],n:'сыр',kc:350,pr:25,def:30},
+  {k:['сливки','sahne','cream'],n:'сливки',kc:206,pr:2,def:80},
+  {k:['масл слив','butter'],n:'сливочное масло',kc:748,pr:1,def:10},
+  {k:['ряженк'],n:'ряженка',kc:85,pr:3,def:200},
+  // Крупы и злаки
+  {k:['овсянк','овес','haferflocken','oats'],n:'овсянка',kc:371,pr:13,def:60},
+  {k:['гречк','buchweizen'],n:'гречка',kc:343,pr:13,def:70},
+  {k:['рис','reis','rice'],n:'рис',kc:344,pr:7,def:70},
+  {k:['киноа','quinoa'],n:'киноа',kc:368,pr:14,def:60},
+  {k:['макарон','nudeln','паста','pasta','тортелин','tortellini','спагетти','spaghetti','penne','fusilli'],n:'паста',kc:350,pr:12,def:80},
+  {k:['полент','polenta','кукурузн кру'],n:'полента',kc:360,pr:8,def:60},
+  {k:['булгур','bulgur'],n:'булгур',kc:342,pr:12,def:70},
+  {k:['ячмен','перловк','graupen'],n:'перловка',kc:324,pr:10,def:70},
+  {k:['хлеб','brot','toast'],n:'хлеб',kc:250,pr:8,def:60},
+  {k:['хлебец','knackebrot'],n:'хлебец',kc:340,pr:11,def:15,unit:'шт',unitW:15},
+  {k:['мюсли','granola'],n:'мюсли',kc:380,pr:10,def:50},
+  // Бобовые
+  {k:['чечевиц','linsen','lentil'],n:'чечевица',kc:296,pr:25,def:80},
+  {k:['нут','kichererbsen','chickpea','хумус','hummus'],n:'нут/хумус',kc:160,pr:9,def:150},
+  {k:['фасол','bohnen','bean'],n:'фасоль',kc:298,pr:22,def:100},
+  {k:['соев','soja'],n:'соя',kc:446,pr:36,def:50},
+  {k:['тофу','tofu'],n:'тофу',kc:76,pr:8,def:150},
+  {k:['эдамам','edamame'],n:'эдамаме',kc:122,pr:11,def:100},
+  // Овощи
+  {k:['броккол','broccoli'],n:'брокколи',kc:34,pr:3,def:150},
+  {k:['шпинат','spinat','spinach'],n:'шпинат',kc:23,pr:3,def:100},
+  {k:['огурц','gurke'],n:'огурец',kc:15,pr:1,def:100},
+  {k:['помидор','tomат','tomate'],n:'помидор',kc:20,pr:1,def:100},
+  {k:['перец','paprika'],n:'перец',kc:31,pr:1,def:100},
+  {k:['цукини','zucchini','кабачок'],n:'цукини',kc:17,pr:1,def:150},
+  {k:['морков','karotten','carrot'],n:'морковь',kc:41,pr:1,def:100},
+  {k:['картофел','erdapfel','potato','kartoffel'],n:'картофель',kc:77,pr:2,def:180},
+  {k:['авокадо','avocado'],n:'авокадо',kc:160,pr:2,def:100},
+  {k:['капуст','kohl','cabbage'],n:'капуста',kc:25,pr:1,def:150},
+  {k:['салат','lettuce','salat','руккол','arugula','микс салат','mixed salad'],n:'салат/зелень',kc:20,pr:2,def:60},
+  {k:['чеснок','knoblauch'],n:'чеснок',kc:149,pr:6,def:10},
+  {k:['лук','zwiebel','onion'],n:'лук',kc:40,pr:1,def:50},
+  {k:['баклажан','aubergine'],n:'баклажан',kc:24,pr:1,def:150},
+  // Фрукты
+  {k:['банан','banane'],n:'банан',kc:96,pr:1,def:120,unit:'шт',unitW:120},
+  {k:['яблок','apfel','apple'],n:'яблоко',kc:52,pr:0,def:150,unit:'шт',unitW:150},
+  {k:['черник','blaubeeren','blueberry'],n:'черника',kc:57,pr:1,def:80},
+  {k:['клубник','erdbeere','strawberry'],n:'клубника',kc:32,pr:1,def:100},
+  {k:['виноград','weintraube'],n:'виноград',kc:67,pr:1,def:100},
+  {k:['апельсин','orange'],n:'апельсин',kc:43,pr:1,def:150,unit:'шт',unitW:150},
+  {k:['лимон','zitrone'],n:'лимон',kc:29,pr:1,def:30},
+  {k:['манго'],n:'манго',kc:60,pr:1,def:150},
+  // Орехи, масла
+  {k:['грецк','walnuss','walnut'],n:'грецкие орехи',kc:654,pr:15,def:30},
+  {k:['миндал','mandeln','almond'],n:'миндаль',kc:576,pr:21,def:30},
+  {k:['кешью','cashew'],n:'кешью',kc:553,pr:18,def:30},
+  {k:['семечк тыкв','kurbiskerne','pumpkin seed'],n:'тыквенные семечки',kc:559,pr:30,def:30},
+  {k:['льнян','leinsamen'],n:'льняное семя',kc:534,pr:18,def:15},
+  {k:['чиа','chia'],n:'семена чиа',kc:486,pr:17,def:15},
+  {k:['арахис','арахисов','erdnuss','peanut'],n:'арахис/паста',kc:567,pr:26,def:30},
+  {k:['оливков масл','olivenol','olive oil'],n:'оливковое масло',kc:884,pr:0,def:10},
+  // Сладкое / прочее
+  {k:['мед','honig','honey'],n:'мед',kc:304,pr:0,def:20},
+  {k:['шоколад','schokolade','chocolate'],n:'шоколад',kc:546,pr:5,def:30},
+  {k:['корица','zimt','cinnamon'],n:'корица',kc:247,pr:4,def:3},
+  // Спортивное питание
+  {k:['гейнер','gainer','mass gainer','масс гейнер'],n:'гейнер',kc:380,pr:25,def:100},
+  {k:['протеин','protein powder','whey','казеин','casein','сывороточн'],n:'протеин (порошок)',kc:375,pr:75,def:30},
+  {k:['протеинов батончик','protein bar'],n:'протеиновый батончик',kc:360,pr:20,def:60,unit:'шт',unitW:60},
+  {k:['bcaa','бцаа','аминокислот','амино'],n:'BCAA',kc:20,pr:5,def:10},
+  {k:['изолят','isolate','whey isolate'],n:'изолят протеина',kc:360,pr:85,def:30},
+  {k:['л-карнитин','l-carnitine','карнитин'],n:'L-карнитин',kc:0,pr:0,def:5}
+];
+
+// ===== MEAL TYPE KEYWORDS =====
+var MEAL_TYPES = {
+  zavtrak: /(завтрак|завтракал|утром поел|утренн)/,
+  pererus: /(перекус|перекусил|перекусывал|снек)/,
+  obed:    /(обед|обедал|пообедал|клин|mittagessen)/,
+  uzhin:   /(ужин|ужинал|поужинал|abendessen)/,
+  posled:  /(последн|поздно|перед сном)/
+};
+
+// Slot index by meal type
+var SLOT_BY_TYPE = {zavtrak:0, pererus:1, obed:2, uzhin:4, posled:6};
+// Also map slot2 (second pererus) and slot5 (perекус 3) — pick nearest pending
+var MEAL_SLOT_NAMES = ['завтрак','перекус','обед','перекус','ужин','перекус','последний прием'];
+
+// ===== FOOD PARSER =====
+// Parse text like "200г трески", "тарелка риса", "2 яйца", "рыбные палочки с тортелини"
+function parseFood(text) {
+  var t = text.toLowerCase();
+  var found = [];
+
+  FDB.forEach(function(food) {
+    // Check if any keyword matches
+    var matched = false;
+    for (var ki = 0; ki < food.k.length; ki++) {
+      if (t.indexOf(food.k[ki]) >= 0) { matched = true; break; }
+    }
+    if (!matched) return;
+
+    // Try to find weight near the keyword
+    var grams = food.def;
+    var matchedKw = food.k.filter(function(kw) { return t.indexOf(kw) >= 0; })[0];
+    var kwPos = t.indexOf(matchedKw);
+
+    // Look for "Xг" or "X г" within 30 chars before/after keyword
+    var region = t.slice(Math.max(0, kwPos-30), kwPos+matchedKw.length+30);
+
+    // patterns: "200г", "200 г", "200g", "200 g"
+    var wm = region.match(/(\d+[\.,]?\d*)\s*(?:г|g|гр|ml|мл)/);
+    if (wm) grams = parseFloat(wm[1].replace(',','.'));
+
+    // "X штук/шт" or count for unit-based foods
+    if (food.unit) {
+      var um = region.match(/(\d+)\s*(?:шт|штук|штуки|шт\.)/);
+      if (!um) um = region.match(/^(\d+)\s+(?:яйц|банан|яблок)/);
+      if (!um) {
+        // bare number before keyword
+        var bm = region.match(/(\d+)\s+/);
+        if (bm && parseInt(bm[1]) < 20) um = bm;
+      }
+      if (um) grams = parseInt(um[1]) * food.unitW;
+    }
+
+    // "полтарелки", "тарелка" ~ 200г, "горсть" ~ 30г, "ложка" ~ 15г
+    if (/тарелк/.test(region)) grams = food.def * 1.5;
+    if (/полтарелк|полтарелки/.test(region)) grams = food.def * 0.75;
+    if (/горст/.test(region)) grams = 35;
+    if (/столов ложк|ст\.л/.test(region)) grams = 15;
+    if (/чайн ложк|ч\.л/.test(region)) grams = 5;
+
+    var kcal = Math.round(food.kc * grams / 100);
+    var prot = Math.round(food.pr * grams / 100 * 10) / 10;
+    found.push({name: food.n, grams: Math.round(grams), kcal: kcal, prot: prot});
+  });
+
+  return found;
+}
+
+// ===== DETECT MEAL SLOT FROM TEXT =====
+function detectMealSlot(t) {
+  for (var type in MEAL_TYPES) {
+    if (MEAL_TYPES[type].test(t)) {
+      var baseIdx = SLOT_BY_TYPE[type];
+      // Find nearest pending slot at or after baseIdx
+      for (var i = baseIdx; i < schedule.length; i++) {
+        if (schedule[i].status === 'pending') return i;
+      }
+      // Or find any pending slot before
+      for (var j = baseIdx - 1; j >= 0; j--) {
+        if (schedule[j].status === 'pending') return j;
+      }
+    }
+  }
+  return -1; // not found by meal type
+}
+
+// ===== DETECT TIME FROM TEXT =====
+function detectTime(t) {
+  // "в 18:00", "в 18", "в 6 вечера"
+  var m = t.match(/в\s+(\d{1,2}):(\d{2})/);
+  if (m) return parseInt(m[1])*60 + parseInt(m[2]);
+  m = t.match(/в\s+(\d{1,2})\s*(?:час|ч\b|\b)/);
+  if (m) { var h = parseInt(m[1]); return (h < 7 ? h+12 : h)*60; }
+  m = t.match(/через\s+(\d+)\s*мин/);
+  if (m) return nowMins() + parseInt(m[1]);
+  if (/через\s+час|через\s+1\s*час/.test(t)) return nowMins() + 60;
+  if (/через\s+полчас/.test(t)) return nowMins() + 30;
+  return -1;
+}
+
+var QMSGS = ['Только поел','Ужин в 18:00','Поел рыбные палочки','Выпил воды','Нет аппетита','Что поесть сейчас?','Чувствую слабость'];
 
 function renderQuickActions() {
   document.getElementById('quickActions').innerHTML = QMSGS.map(function(q) {
@@ -960,105 +1150,143 @@ function addMsg(role, text) {
   setTimeout(function() { wrap.scrollTop = wrap.scrollHeight; }, 50);
 }
 
-function getIntent(t) {
-  if (/(съел|поел|покушал|завтракал|обедал|ужинал|перекусил|только поел|кушаю)/.test(t)) return 'ATE';
-  if (/(пообедаю|поужинаю|позавтракаю|поем|буду есть|через|около)/.test(t)) return 'WILL_EAT';
-  if (/(выпил воды|выпил стакан|пью воду)/.test(t)) return 'WATER';
-  if (/(есть яйц|есть творог|есть тунец|есть рыб|есть гречк|у меня есть|дома есть|холодильник)/.test(t)) return 'FRIDGE';
-  if (/(пропустил|не поел|нет времени)/.test(t)) return 'SKIPPED';
-  if (/(изжог|рефлюкс|кислый|тяжесть|ком в горле)/.test(t)) return 'SYMPTOM';
-  if (/(слабость|нет сил|нет аппетита|плохо|устал)/.test(t)) return 'WEAK';
-  if (/(что поесть|что съесть|посоветуй|предложи)/.test(t)) return 'SUGGEST';
-  if (/(привет|здравствуй|как дела|доброе|добрый|норм)/.test(t)) return 'GREET';
-  return 'UNKNOWN';
-}
-
-function getMealByHour(h) {
-  var cat = h < 10 ? 'z' : h < 12 ? 'p' : h < 16 ? 'o' : h < 19 ? 'u' : h < 20 ? 'p' : 'n';
-  var arr = MEALS[cat];
-  return arr[Math.floor(Math.random() * arr.length)];
-}
-
 function mamaReply(text) {
   var t = text.toLowerCase();
-  var intent = getIntent(t);
   var now = new Date();
-  var nm = now.getHours() * 60 + now.getMinutes();
-  var pi = -1;
+  var nm = nowMins();
+  var pi = -1; // first pending
   for (var i = 0; i < schedule.length; i++) { if (schedule[i].status === 'pending') { pi = i; break; } }
   var done = schedule.filter(function(m) { return m.status === 'done'; });
 
-  if (intent === 'ATE') {
-    var mi = pi >= 0 ? pi : 0;
-    if (/завтрак/.test(t)) mi = 0;
-    else if (/обед/.test(t)) mi = 2;
-    else if (/ужин/.test(t)) mi = 4;
-    if (mi < schedule.length && schedule[mi].status !== 'done') {
-      schedule[mi].status = 'done';
-      schedule[mi].actualTime = p2(now.getHours()) + ':' + p2(now.getMinutes());
-      var delay = nm - toMins(BASE[mi].time);
-      if (delay > 25) { shiftSchedule(mi+1, delay); }
-      save(); renderHome();
-      var totalK = schedule.filter(function(m) { return m.status === 'done'; }).reduce(function(a,m) { return a+(m.customMeal?m.customMeal.kcal:m.kcal); }, 0);
-      var rem = 2700 - totalK;
-      var nx = schedule.filter(function(m) { return m.status === 'pending'; })[0];
-      return 'Записала! Осталось ~' + rem + ' ккал за день.' + (nx ? ' Следующий — ' + nx.name + ' в ' + nx.time + '.' : ' Все приемы выполнены!');
-    }
-    return 'Молодец! ' + done.length + '/7 приемов сделано.';
+  // ---- GREET ----
+  if (/(привет|здравствуй|как дела|доброе|добрый|норм\b)/.test(t)) {
+    var gr0 = now.getHours() < 10 ? 'Доброе утро' : now.getHours() < 14 ? 'Привет' : now.getHours() < 18 ? 'Добрый день' : 'Добрый вечер';
+    var nx0 = schedule.filter(function(m) { return m.status === 'pending'; })[0];
+    return gr0 + '! Сделано ' + done.length + '/7 приемов, ' + waterCount + '/12 стаканов.' + (nx0 ? ' Следующий — ' + nx0.name + ' в ' + nx0.time + '.' : ' Все выполнено!');
   }
 
-  if (intent === 'WILL_EAT') {
-    var mm = t.match(/в\s+(\d{1,2}):(\d{2})/);
-    if (mm && pi >= 0) {
-      var targetM = parseInt(mm[1])*60 + parseInt(mm[2]);
-      var del = targetM - toMins(schedule[pi].time);
-      if (Math.abs(del) > 5) { shiftSchedule(pi, del); save(); renderHome(); }
-      return 'Хорошо, перестроила! ' + schedule[pi].name + ' теперь в ' + schedule[pi].time + '.';
-    }
-    var mm2 = t.match(/через\s+(\d+)\s*мин/);
-    if (mm2 && pi >= 0) {
-      shiftSchedule(pi, parseInt(mm2[1])); save(); renderHome();
-      return 'Сдвинула на ' + mm2[1] + ' минут. Следующий в ' + schedule[pi].time + '.';
-    }
-    return 'Скажи точнее — во сколько? Например "пообедаю в 15:30".';
-  }
-
-  if (intent === 'WATER') {
+  // ---- WATER ----
+  if (/(выпил воды|выпил стакан|пью воду|выпил.*воды)/.test(t)) {
     waterCount = Math.min(12, waterCount+1); save(); renderHome();
-    return 'Записала! ' + waterCount + '/12 стаканов. ' + (waterCount < 8 ? 'Пей больше!' : 'Отлично!');
+    return 'Записала! ' + waterCount + '/12 стаканов. ' + (waterCount < 8 ? 'Пей больше — при склеродермии важно!' : 'Отлично!');
   }
 
-  if (intent === 'SKIPPED') {
-    if (pi > 0) { schedule[pi-1].status = 'skipped'; save(); renderHome(); }
-    return 'Понимаю. Следующий в ' + (pi >= 0 ? schedule[pi].time : '—') + ' — не пропускай, при низком ферритине это важно!';
-  }
-
-  if (intent === 'SYMPTOM') {
+  // ---- SYMPTOM ----
+  if (/(изжог|рефлюкс|кислый|тяжесть|ком в горле)/.test(t)) {
     if (/кислый|рефлюкс|изжог/.test(t)) return 'Рефлюкс от грыжи — не ложись 2ч. Ешь медленнее и меньшими порциями.';
     if (/тяжесть/.test(t)) return 'Тяжесть — съел быстро или много. Походи 15 мин — поможет.';
-    return 'Симптом записан. Если часто — скажи гастроэнтерологу. Маленькие порции, без острого, не ложись сразу.';
+    return 'Симптом записан. Маленькие порции, без острого, не ложись сразу.';
   }
 
-  if (intent === 'WEAK') {
-    var tk = done.reduce(function(a,m) { return a+(m.customMeal?m.customMeal.kcal:m.kcal); }, 0);
-    if (tk < 800 && done.length < 3) return 'Слабость — ты мало поел! Всего ' + tk + ' ккал. При низком ферритине это бьет по энергии. Поешь сейчас!';
-    if (waterCount < 5) return 'Слабость от обезвоживания — выпил лишь ' + waterCount + ' стаканов. Выпей воды сейчас!';
-    return 'При низком ферритине слабость бывает. Принял железо и D3 сегодня? Держи режим питания.';
+  // ---- WEAK ----
+  if (/(слабость|нет сил|нет аппетита|плохо себя|устал)/.test(t)) {
+    var tk0 = done.reduce(function(a,m) { return a+(m.customMeal?m.customMeal.kcal:m.kcal); }, 0);
+    if (tk0 < 800 && done.length < 3) return 'Слабость — ты мало поел! Всего ' + tk0 + ' ккал из 2700. Поешь сейчас!';
+    if (waterCount < 5) return 'Слабость от обезвоживания — выпил лишь ' + waterCount + ' стаканов. Выпей воды!';
+    return 'При низком ферритине слабость бывает. Принял железо и D3 сегодня?';
   }
 
-  if (intent === 'SUGGEST' || intent === 'FRIDGE') {
-    var meal = getMealByHour(now.getHours());
-    return 'Сейчас хорошо: ' + meal.name + '\n' + meal.items.join(' · ') + '\n' + meal.kcal + ' ккал · ' + meal.prot + 'г · ' + meal.time + ' мин · ' + meal.store + '\n\nНапиши что есть дома — подберу замену!';
+  // ---- SKIP ----
+  if (/(пропустил|не поел|нет времени есть)/.test(t)) {
+    var skipIdx = detectMealSlot(t);
+    if (skipIdx < 0 && pi > 0) skipIdx = pi - 1;
+    if (skipIdx >= 0 && skipIdx < schedule.length) { schedule[skipIdx].status = 'skipped'; save(); renderHome(); }
+    return 'Понимаю. Следующий в ' + (pi >= 0 ? schedule[pi].time : '') + ' — не пропускай, при низком ферритине это важно!';
   }
 
-  if (intent === 'GREET') {
-    var gr = now.getHours() < 10 ? 'Доброе утро' : now.getHours() < 14 ? 'Привет' : now.getHours() < 18 ? 'Добрый день' : 'Добрый вечер';
-    var nx2 = schedule.filter(function(m) { return m.status === 'pending'; })[0];
-    return gr + '! Сделано ' + done.length + '/7 приемов, ' + waterCount + '/12 стаканов.' + (nx2 ? ' Следующий — ' + nx2.name + ' в ' + nx2.time + '.' : ' Все выполнено!');
+  // ---- SCHEDULE CHANGE: "ужин в 18:00", "клин в 18", "обед через час" ----
+  var schedTime = detectTime(t);
+  var schedSlot = detectMealSlot(t);
+  if (schedTime >= 0 && (schedSlot >= 0 || pi >= 0)) {
+    var tgtSlot = schedSlot >= 0 ? schedSlot : pi;
+    var del = schedTime - toMins(schedule[tgtSlot].time);
+    if (Math.abs(del) > 3) {
+      shiftSchedule(tgtSlot, del);
+      save(); renderHome();
+    }
+    var slotName = MEAL_SLOT_NAMES[tgtSlot] || schedule[tgtSlot].name;
+    return 'Поняла! ' + slotName + ' сдвинула на ' + fromMins(schedTime) + '. Остальные приемы тоже скорректированы.';
   }
 
-  var nx3 = schedule.filter(function(m) { return m.status === 'pending'; })[0];
-  return 'Поняла! ' + (nx3 ? 'Следующий — ' + nx3.name + ' в ' + nx3.time + '. ' : '') + 'Напиши что поел или что приготовить.';
+  // ---- ATE: parse food from text ----
+  var ateWords = /(съел|поел|покушал|завтракал|обедал|ужинал|перекусил|только поел|кушаю|ел|поел|скушал)/;
+  var hasFoods = parseFood(t).length > 0;
+
+  if (ateWords.test(t) || hasFoods) {
+    var foods = parseFood(t);
+    // Determine which slot
+    var eatSlot = detectMealSlot(t);
+    if (eatSlot < 0) eatSlot = pi >= 0 ? pi : 0;
+
+    var totalKcal = 0, totalProt = 0, foodNames = [];
+    foods.forEach(function(f) { totalKcal += f.kcal; totalProt += f.prot; foodNames.push(f.name + ' ' + f.grams + 'г'); });
+
+    // Mark slot done
+    var actual = p2(now.getHours()) + ':' + p2(now.getMinutes());
+    if (eatSlot < schedule.length && schedule[eatSlot].status !== 'done') {
+      schedule[eatSlot].status = 'done';
+      schedule[eatSlot].actualTime = actual;
+      if (foods.length > 0) {
+        schedule[eatSlot].customMeal = {
+          name: foods.map(function(f){return f.name;}).join(' + '),
+          items: foods.map(function(f){return f.name + ' ' + f.grams + 'г';}),
+          kcal: totalKcal || schedule[eatSlot].kcal,
+          prot: totalProt || schedule[eatSlot].prot
+        };
+      }
+      var delay0 = nm - toMins(BASE[eatSlot].time);
+      if (delay0 > 25) {
+        var sh = shiftSchedule(eatSlot+1, delay0);
+        if (sh > 0) {
+          document.getElementById('lateBanner').classList.add('show');
+          document.getElementById('lateText').textContent = 'Сдвинула ' + sh + ' приемов на ~' + Math.round(delay0) + ' мин';
+        }
+      }
+      save(); renderHome();
+    }
+
+    var totalNow = schedule.filter(function(m){return m.status==='done';}).reduce(function(a,m){return a+(m.customMeal?m.customMeal.kcal:m.kcal);},0);
+    var rem = 2700 - totalNow;
+    var nx1 = schedule.filter(function(m){return m.status==='pending';})[0];
+    var reply = 'Записала!';
+    if (foods.length > 0) {
+      reply += '\n' + foodNames.join(', ');
+      reply += '\n' + totalKcal + ' ккал · ' + totalProt.toFixed(1) + 'г белка';
+    }
+    reply += '\nВсего за день: ' + totalNow + ' / 2700 ккал, осталось ~' + rem + ' ккал.';
+    reply += nx1 ? '\nСледующий — ' + nx1.name + ' в ' + nx1.time + '.' : '\nВсе приемы выполнены!';
+    return reply;
+  }
+
+  // ---- SUGGEST / FRIDGE ----
+  if (/(что поесть|что съесть|посоветуй|предложи|есть дома|в холодильнике|у меня есть|дома есть)/.test(t)) {
+    var fridgeFoods = parseFood(t);
+    if (fridgeFoods.length > 0) {
+      var totalFr = fridgeFoods.reduce(function(a,f){return a+f.kcal;},0);
+      var protFr = fridgeFoods.reduce(function(a,f){return a+f.prot;},0);
+      var names = fridgeFoods.map(function(f){return f.name+' '+f.grams+'г';}).join(', ');
+      return 'Вижу в холодильнике: ' + names + '\nВместе ~' + totalFr + ' ккал · ' + protFr.toFixed(1) + 'г белка. '
+        + (protFr < 20 ? 'Маловато белка — добавь творог или яйцо.' : protFr > 35 ? 'Отличный выбор по белку!' : 'Хороший вариант!')
+        + '\nПо правилам: жуй медленно, не ложись 2ч, ужин строго до 20:30.';
+    }
+    var h2 = now.getHours();
+    var cat2 = h2 < 10 ? 'z' : h2 < 12 ? 'p' : h2 < 16 ? 'o' : h2 < 19 ? 'u' : h2 < 20 ? 'p' : 'n';
+    var arr2 = MEALS[cat2];
+    var meal2 = arr2[Math.floor(Math.random()*arr2.length)];
+    return 'Сейчас хорошо: ' + meal2.name + '\n' + meal2.items.join(' · ') + '\n' + meal2.kcal + ' ккал · ' + meal2.prot + 'г · ' + meal2.time + ' мин · ' + meal2.store + '\n\nЕсть что-то конкретное? Напиши — посчитаю!';
+  }
+
+  // ---- UNKNOWN with foods mentioned ----
+  var unknownFoods = parseFood(t);
+  if (unknownFoods.length > 0) {
+    var ufKcal = unknownFoods.reduce(function(a,f){return a+f.kcal;},0);
+    var ufProt = unknownFoods.reduce(function(a,f){return a+f.prot;},0);
+    var ufNames = unknownFoods.map(function(f){return f.name+' '+f.grams+'г';}).join(', ');
+    return 'Нашла: ' + ufNames + '\n~' + ufKcal + ' ккал · ' + ufProt.toFixed(1) + 'г белка.\nЭто обед? Ужин? Напиши "поел" и я запишу!';
+  }
+
+  var nx4 = schedule.filter(function(m){return m.status==='pending';})[0];
+  return 'Поняла! ' + (nx4 ? 'Следующий — ' + nx4.name + ' в ' + nx4.time + '. ' : '') + 'Напиши что поел — посчитаю ккал и запишу. Или "ужин в 18:00" — скорректирую расписание.';
 }
 
 function sendMessage() {
